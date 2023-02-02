@@ -1,0 +1,14 @@
+basePath: /api/v1
+host: localhost:8090
+info:
+  contact: {}
+  description: API Server for nix_chat application.
+  title: nix_chat API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
