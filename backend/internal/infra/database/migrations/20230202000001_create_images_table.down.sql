@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS nix_chat.images CASCADE;
