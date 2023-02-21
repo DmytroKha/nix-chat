@@ -10,6 +10,7 @@ type User struct {
 	Id       int64 `gorm:"primary_key;auto_increment;not_null"`
 	Name     string
 	Password string
+	Image    Image
 }
 
 type Users struct {
@@ -23,6 +24,7 @@ type UserRepository interface {
 	Save(user User) (User, error)
 	Update(user User) (User, error)
 	Find(id int64) (User, error)
+	FindByName(name string) (User, error)
 }
 
 type userRepository struct {
@@ -54,6 +56,15 @@ func (r userRepository) Update(u User) (User, error) {
 func (r *userRepository) Find(id int64) (User, error) {
 	var u User
 	err := r.sess.Table(UserTableName).First(&u, "id = ?", id).Error
+	if err != nil {
+		return User{}, err
+	}
+	return u, nil
+}
+
+func (r *userRepository) FindByName(name string) (User, error) {
+	var u User
+	err := r.sess.Table(UserTableName).First(&u, "name = ?", name).Error
 	if err != nil {
 		return User{}, err
 	}

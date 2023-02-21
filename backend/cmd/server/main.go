@@ -9,17 +9,18 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/infra/filesystem"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/controllers"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/router"
+	"github.com/DmytroKha/nix-chat/internal/infra/http/websocket"
 	_ "github.com/go-sql-driver/mysql"
 	mysqlG "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
 )
 
-// @title       nix_chat API
+// @title       nix_chat
 // @version     1.0
-// @description API Server for nix_chat application.
+// @description Server for nix_chat application.
 
-// @host     localhost:8090
+// @host     localhost:8080
 // @BasePath  /api/v1
 
 // @securityDefinitions.apikey ApiKeyAuth
@@ -33,36 +34,42 @@ func main() {
 		log.Fatalf("Unable to apply migrations: %q\n", err)
 	}
 
-	dsn := fmt.Sprintf("%v:%v@tcp(%v)/%v",
+	dsn := fmt.Sprintf("%v:%v@tcp(%v)/%v?%v",
 		conf.DatabaseUser,
 		conf.DatabasePassword,
 		conf.DatabaseHost,
-		conf.DatabaseName)
+		conf.DatabaseName,
+		"parseTime=true")
 	db, err := gorm.Open(mysqlG.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	userRepository := database.NewUserRepository(db)
-	userService := app.NewUserService(userRepository)
-	userController := controllers.NewUserController(userService)
-
-	authService := app.NewAuthService(userService, conf)
-	authController := controllers.NewAuthController(authService, userService)
 
 	imageRepository := database.NewImageRepository(db)
 	imageStorageService := filesystem.NewImageStorageService(conf.FileStorageLocation)
 	imageService := app.NewImageService(imageRepository, imageStorageService)
 	imageController := controllers.NewImageController(imageService)
 
+	userRepository := database.NewUserRepository(db)
+	userService := app.NewUserService(userRepository, imageService)
+	userController := controllers.NewUserController(userService)
+
+	authService := app.NewAuthService(userService, conf)
+	authController := controllers.NewAuthController(authService, userService)
+
+	wsServer := websocket.NewWebsocketServer()
+	go wsServer.Run()
+
 	e := router.New(
 		userController,
 		authController,
 		imageController,
+		wsServer,
+		conf,
 	)
 
-	// service start at port :8090
-	err = e.Start(":8090")
+	// service start at port :8080
+	err = e.Start(":8080")
 	if err != nil {
 		log.Fatalln(err)
 	}

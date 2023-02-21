@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS nix_chat.images
     name         varchar(250) NOT NULL,
     created_date timestamp    NOT NULL,
     updated_date timestamp    NOT NULL,
-    deleted_date timestamp    NULL
+    deleted bool    NOT NULL
 );
