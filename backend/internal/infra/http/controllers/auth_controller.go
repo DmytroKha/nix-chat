@@ -28,14 +28,14 @@ func NewAuthController(as app.AuthService, us app.UserService) AuthController {
 // @Accept       json
 // @Produce      json
 // @Produce      xml
-// @Param        input   body      requests.UserRequest  true  "User body"
+// @Param        input   body      requests.UserRegistrationRequest  true  "User body"
 // @Success      201  {object}  resources.AuthDto
 // @Failure      400  {string}  echo.HTTPError
 // @Failure      422  {string}  echo.HTTPError
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /auth/register [post]
 func (c AuthController) Register(ctx echo.Context) error {
-	var usr requests.UserRequest
+	var usr requests.UserRegistrationRequest
 	err := ctx.Bind(&usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
@@ -60,14 +60,14 @@ func (c AuthController) Register(ctx echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Produce      xml
-// @Param        input   body      requests.UserRequest  true  "User body"
+// @Param        input   body      requests.UserRegistrationRequest  true  "User body"
 // @Success      200  {object}  resources.AuthDto
 // @Failure      400  {string}  echo.HTTPError
 // @Failure      422  {string}  echo.HTTPError
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /auth/login [post]
 func (c AuthController) Login(ctx echo.Context) error {
-	var usr requests.UserRequest
+	var usr requests.UserRegistrationRequest
 	err := ctx.Bind(&usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)

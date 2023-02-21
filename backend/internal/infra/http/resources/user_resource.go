@@ -6,8 +6,9 @@ import (
 )
 
 type UserDto struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
+	Id    int64     `json:"id"`
+	Name  string    `json:"name"`
+	Image *ImageDto `json:"image,omitempty"`
 }
 
 type UsersDto struct {
@@ -31,9 +32,18 @@ type GoogleUrlDto struct {
 }
 
 func (d UserDto) DatabaseToDto(user database.User) UserDto {
+	var imageDto *ImageDto
+
+	if user.Image.Id != 0 {
+		var imgDto ImageDto
+		imgDto.DatabaseToDto(user.Image)
+		imageDto = &imgDto
+	}
+
 	return UserDto{
-		Id:   user.Id,
-		Name: user.Name,
+		Id:    user.Id,
+		Name:  user.Name,
+		Image: imageDto,
 	}
 }
 

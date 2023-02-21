@@ -15,8 +15,8 @@ import (
 
 //go:generate mockery --dir . --name AuthService --output ./mocks
 type AuthService interface {
-	Register(user requests.UserRequest) (database.User, string, error)
-	Login(user requests.UserRequest) (database.User, string, error)
+	Register(user requests.UserRegistrationRequest) (database.User, string, error)
+	Login(user requests.UserRegistrationRequest) (database.User, string, error)
 	GenerateJwt(user database.User) (string, error)
 }
 
@@ -32,13 +32,13 @@ func NewAuthService(us UserService, cf config.Configuration) AuthService {
 	}
 }
 
-func (s authService) Register(usr requests.UserRequest) (database.User, string, error) {
+func (s authService) Register(usr requests.UserRegistrationRequest) (database.User, string, error) {
 	u, err := usr.ToDatabaseModel()
 	if err != nil {
 		log.Print(err)
 		return database.User{}, "", err
 	}
-	_, err = s.userService.Find(u.Id)
+	_, err = s.userService.FindByName(u.Name)
 	if err == nil {
 		log.Printf("invalid credentials")
 		return database.User{}, "", errors.New("invalid credentials")
@@ -52,13 +52,13 @@ func (s authService) Register(usr requests.UserRequest) (database.User, string, 
 	return user, token, err
 }
 
-func (s authService) Login(usr requests.UserRequest) (database.User, string, error) {
+func (s authService) Login(usr requests.UserRegistrationRequest) (database.User, string, error) {
 	user, err := usr.ToDatabaseModel()
 	if err != nil {
 		log.Printf("AuthService: login error %s", err)
 		return database.User{}, "", err
 	}
-	u, err := s.userService.Find(user.Id)
+	u, err := s.userService.FindByName(user.Name)
 	if err != nil {
 		log.Printf("AuthService: login error %s", err)
 		return database.User{}, "", err

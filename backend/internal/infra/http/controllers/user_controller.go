@@ -41,6 +41,10 @@ func (u UserController) Find(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusNotFound, err)
 	}
+	user, err = u.userService.LoadAvatar(user)
+	if err != nil {
+		return FormatedResponse(ctx, http.StatusInternalServerError, err)
+	}
 	var userDto resources.UserDto
 	return FormatedResponse(ctx, http.StatusOK, userDto.DatabaseToDto(user))
 }
@@ -59,8 +63,8 @@ func (u UserController) Find(ctx echo.Context) error {
 // @Failure      400  {string}  echo.HTTPError
 // @Failure      422  {string}  echo.HTTPError
 // @Failure      500  {string}  echo.HTTPError
-// @Router       /users/{id} [put]
-func (c UserController) ChangePassword(ctx echo.Context) error {
+// @Router       /users/{id}/change-pwd [put]
+func (u UserController) ChangePassword(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
@@ -75,7 +79,11 @@ func (c UserController) ChangePassword(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
 	}
-	updatedUser, err := c.userService.ChangePassword(id, cpr)
+	updatedUser, err := u.userService.ChangePassword(id, cpr)
+	if err != nil {
+		return FormatedResponse(ctx, http.StatusInternalServerError, err)
+	}
+	updatedUser, err = u.userService.LoadAvatar(updatedUser)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusInternalServerError, err)
 	}
@@ -92,28 +100,32 @@ func (c UserController) ChangePassword(ctx echo.Context) error {
 // @Produce      json
 // @Produce      xml
 // @Param        id   path      string  true  "User ID"
-// @Param        input   body      requests.ChangeLoginRequest  true  "User body"
+// @Param        input   body      requests.UserRequest  true  "User body"
 // @Success      200  {object}  resources.UserDto
 // @Failure      400  {string}  echo.HTTPError
 // @Failure      422  {string}  echo.HTTPError
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /users/{id} [put]
-func (c UserController) ChangeLogin(ctx echo.Context) error {
+func (u UserController) Update(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
 	}
 
-	var clr requests.ChangeLoginRequest
-	err = ctx.Bind(&clr)
+	var usr requests.UserRequest
+	err = ctx.Bind(&usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
 	}
-	err = ctx.Validate(&clr)
+	err = ctx.Validate(&usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
 	}
-	updatedUser, err := c.userService.ChangeLogin(id, clr)
+	updatedUser, err := u.userService.Update(id, usr)
+	if err != nil {
+		return FormatedResponse(ctx, http.StatusInternalServerError, err)
+	}
+	updatedUser, err = u.userService.LoadAvatar(updatedUser)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusInternalServerError, err)
 	}
