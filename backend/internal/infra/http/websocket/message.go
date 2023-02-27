@@ -14,10 +14,11 @@ const JoinRoomPrivateAction = "join-room-private"
 const RoomJoinedAction = "room-joined"
 
 type Message struct {
-	Action  string  `json:"action"`
-	Message string  `json:"message"`
-	Target  *Room   `json:"target"`
-	Sender  *Client `json:"sender"`
+	Action  string `json:"action"`
+	Message string `json:"message"`
+	Target  *Room  `json:"target"`
+	//Sender  domain.User `json:"sender"`
+	SenderId int64 `json:"senderId"`
 }
 
 func (message *Message) encode() []byte {
@@ -27,4 +28,22 @@ func (message *Message) encode() []byte {
 	}
 
 	return j
+}
+
+// UnmarshalJSON custom unmarshel to create a Client instance for Sender
+func (message *Message) UnmarshalJSON(data []byte) error {
+	type Alias Message
+	msg := &struct {
+		//Sender Client `json:"sender"`
+		SenderId int64 `json:"senderId"`
+		*Alias
+	}{
+		Alias: (*Alias)(message),
+	}
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return err
+	}
+	//message.Sender = &msg.Sender
+	message.SenderId = msg.SenderId
+	return nil
 }

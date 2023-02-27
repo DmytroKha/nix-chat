@@ -1,11 +1,13 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
+	"github.com/DmytroKha/nix-chat/config"
 	"github.com/labstack/echo/v4"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -41,14 +43,14 @@ type Client struct {
 	conn     *websocket.Conn
 	wsServer *WsServer
 	send     chan []byte
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
 	rooms    map[*Room]bool
 }
 
 func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
 	return &Client{
-		ID:       uuid.New(),
+		//ID:       uuid.New(),
 		Name:     name,
 		conn:     conn,
 		wsServer: wsServer,
@@ -58,7 +60,7 @@ func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
 
 }
 
-func (client *Client) readPump() {
+func (client *Client) readPump(ctx context.Context) {
 	defer func() {
 		client.disconnect()
 	}()
@@ -77,7 +79,7 @@ func (client *Client) readPump() {
 			break
 		}
 
-		client.handleNewMessage(jsonMessage)
+		client.handleNewMessage(jsonMessage, ctx)
 	}
 
 }
@@ -153,7 +155,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 	client := newClient(conn, wsServer, name[0])
 
 	go client.writePump()
-	go client.readPump()
+	go client.readPump(ctx.Request().Context())
 
 	wsServer.register <- client
 
@@ -163,7 +165,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 // Refactored method
 // Use the ID of the target room instead of the name to find it.
 // Added case for joining private room
-func (client *Client) handleNewMessage(jsonMessage []byte) {
+func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) {
 
 	var message Message
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
@@ -171,7 +173,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 		return
 	}
 
-	message.Sender = client
+	message.SenderId = client.ID
 
 	switch message.Action {
 	case SendMessageAction:
@@ -181,29 +183,30 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 		}
 
 	case JoinRoomAction:
-		client.handleJoinRoomMessage(message)
+		client.handleJoinRoomMessage(message, ctx)
 
 	case LeaveRoomAction:
 		client.handleLeaveRoomMessage(message)
 
 	case JoinRoomPrivateAction:
-		client.handleJoinRoomPrivateMessage(message)
+		client.handleJoinRoomPrivateMessage(message, ctx)
 	}
 
 }
 
 // Refactored method
 // Use new joinRoom method
-func (client *Client) handleJoinRoomMessage(message Message) {
+func (client *Client) handleJoinRoomMessage(message Message, ctx context.Context) {
 	roomName := message.Message
 
-	client.joinRoom(roomName, nil)
+	client.joinRoom(roomName, 0, ctx)
 }
 
 // Refactored method
 // Added nil check
 func (client *Client) handleLeaveRoomMessage(message Message) {
-	room := client.wsServer.findRoomByID(message.Message)
+	roomId, _ := strconv.Atoi(message.Message)
+	room := client.wsServer.findRoomByID(int64(roomId))
 	if room == nil {
 		return
 	}
@@ -217,41 +220,52 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 // New method
 // When joining a private room we will combine the IDs of the users
 // Then we will bothe join the client and the target.
-func (client *Client) handleJoinRoomPrivateMessage(message Message) {
+func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.Context) {
 
-	target := client.wsServer.findClientByID(message.Message)
-	if target == nil {
+	userId, _ := strconv.Atoi(message.Message)
+	target := client.wsServer.findUserByID(int64(userId))
+
+	if target.Id == 0 {
 		return
 	}
 
 	// create unique room name combined to the two IDs
-	roomName := message.Message + client.ID.String()
+	roomName := message.Message + strconv.Itoa(int(client.ID))
 
-	client.joinRoom(roomName, target)
-	target.joinRoom(roomName, client)
+	// Join room
+	joinedRoom := client.joinRoom(roomName, target.Id, ctx)
+
+	// Invite target user
+	if joinedRoom != nil {
+		client.inviteTargetUser(target.Id, joinedRoom, ctx)
+	}
 
 }
 
 // New method
 // Joining a room both for public and private roooms
 // When joiing a private room a sender is passed as the opposing party
-func (client *Client) joinRoom(roomName string, sender *Client) {
+func (client *Client) joinRoom(roomName string, senderId int64, ctx context.Context) *Room {
 
-	room := client.wsServer.findRoomByName(roomName)
+	room := client.wsServer.findRoomByName(roomName, ctx)
 	if room == nil {
-		room = client.wsServer.createRoom(roomName, sender != nil)
+		room = client.wsServer.createRoom(roomName, senderId != 0, ctx)
 	}
 
 	// Don't allow to join private rooms through public room message
-	if sender == nil && room.Private {
-		return
+	if senderId == 0 && room.Private {
+		return nil
 	}
 
 	if !client.isInRoom(room) {
+
 		client.rooms[room] = true
 		room.register <- client
-		client.notifyRoomJoined(room, sender)
+
+		client.notifyRoomJoined(room, senderId)
 	}
+
+	return room
 
 }
 
@@ -266,16 +280,36 @@ func (client *Client) isInRoom(room *Room) bool {
 
 // New method
 // Notify the client of the new room he/she joined
-func (client *Client) notifyRoomJoined(room *Room, sender *Client) {
+func (client *Client) notifyRoomJoined(room *Room, senderId int64) {
 	message := Message{
 		Action: RoomJoinedAction,
 		Target: room,
-		Sender: sender,
+		//Sender: sender,
+		SenderId: senderId,
 	}
 
 	client.send <- message.encode()
 }
 
+func (client *Client) GetId() int64 {
+	return client.ID
+}
+
 func (client *Client) GetName() string {
 	return client.Name
+}
+
+// Send out invite message over pub/sub in the general channel.
+func (client *Client) inviteTargetUser(targetId int64, room *Room, ctx context.Context) {
+	inviteMessage := &Message{
+		Action:  JoinRoomPrivateAction,
+		Message: strconv.Itoa(int(targetId)),
+		Target:  room,
+		//Sender:  client,
+		SenderId: client.ID,
+	}
+
+	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {
+		log.Println(err)
+	}
 }

@@ -1,15 +1,17 @@
 package websocket
 
 import (
+	"context"
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/DmytroKha/nix-chat/config"
+	"log"
 )
 
 const welcomeMessage = "%s joined the room"
 
 type Room struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
@@ -20,7 +22,7 @@ type Room struct {
 // NewRoom creates a new Room
 func NewRoom(name string, private bool) *Room {
 	return &Room{
-		ID:         uuid.New(),
+		//ID:         uuid.New(),
 		Name:       name,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
@@ -31,7 +33,9 @@ func NewRoom(name string, private bool) *Room {
 }
 
 // RunRoom runs our room, accepting various requests
-func (room *Room) RunRoom() {
+func (room *Room) RunRoom(ctx context.Context) {
+	go room.subscribeToRoomMessages(ctx)
+
 	for {
 		select {
 
@@ -42,7 +46,7 @@ func (room *Room) RunRoom() {
 			room.unregisterClientInRoom(client)
 
 		case message := <-room.broadcast:
-			room.broadcastToClientsInRoom(message.encode())
+			room.publishRoomMessage(message.encode(), ctx)
 		}
 
 	}
@@ -77,10 +81,33 @@ func (room *Room) notifyClientJoined(client *Client) {
 	room.broadcastToClientsInRoom(message.encode())
 }
 
-func (room *Room) GetId() string {
-	return room.ID.String()
+func (room *Room) GetId() int64 {
+	return room.ID
 }
 
 func (room *Room) GetName() string {
 	return room.Name
+}
+
+// Add the GetPrivate method to make Room compatible with model.Room interface
+func (room *Room) GetPrivate() bool {
+	return room.Private
+}
+
+func (room *Room) publishRoomMessage(message []byte, ctx context.Context) {
+	err := config.Redis.Publish(ctx, room.GetName(), message).Err()
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (room *Room) subscribeToRoomMessages(ctx context.Context) {
+	pubsub := config.Redis.Subscribe(ctx, room.GetName())
+
+	ch := pubsub.Channel()
+
+	for msg := range ch {
+		room.broadcastToClientsInRoom([]byte(msg.Payload))
+	}
 }

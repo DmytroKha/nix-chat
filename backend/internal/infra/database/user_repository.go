@@ -19,16 +19,18 @@ type Users struct {
 	Pages uint64
 }
 
+type userRepository struct {
+	sess *gorm.DB
+}
+
 //go:generate mockery --dir . --name UserRepository --output ./mocks
 type UserRepository interface {
 	Save(user User) (User, error)
 	Update(user User) (User, error)
+	Delete(id int64) error
 	Find(id int64) (User, error)
 	FindByName(name string) (User, error)
-}
-
-type userRepository struct {
-	sess *gorm.DB
+	FindAll() ([]User, error)
 }
 
 func NewUserRepository(dbSession *gorm.DB) UserRepository {
@@ -36,6 +38,14 @@ func NewUserRepository(dbSession *gorm.DB) UserRepository {
 		sess: dbSession,
 	}
 }
+
+//func (user *User) GetId() int64 {
+//	return user.Id
+//}
+
+//func (user *User) GetName() string {
+//	return user.Name
+//}
 
 func (r userRepository) Save(u User) (User, error) {
 	err := r.sess.Table(UserTableName).Create(&u).Error
@@ -51,6 +61,14 @@ func (r userRepository) Update(u User) (User, error) {
 		return User{}, err
 	}
 	return u, nil
+}
+
+func (r userRepository) Delete(id int64) error {
+	err := r.sess.Table(UserTableName).Where("id = ?", id).Delete(User{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *userRepository) Find(id int64) (User, error) {
@@ -69,4 +87,13 @@ func (r *userRepository) FindByName(name string) (User, error) {
 		return User{}, err
 	}
 	return u, nil
+}
+
+func (r userRepository) FindAll() ([]User, error) {
+	var users []User
+	err := r.sess.Table(UserTableName).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
