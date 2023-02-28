@@ -3,7 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/labstack/echo/v4"
 	"log"
@@ -48,15 +48,18 @@ type Client struct {
 	rooms    map[*Room]bool
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
-	return &Client{
-		//ID:       uuid.New(),
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string, userId int64) *Client {
+	client := &Client{
 		Name:     name,
 		conn:     conn,
 		wsServer: wsServer,
 		send:     make(chan []byte, 256),
 		rooms:    make(map[*Room]bool),
 	}
+
+	client.ID = userId
+
+	return client
 
 }
 
@@ -137,14 +140,16 @@ func (client *Client) disconnect() {
 
 // ServeWs handles websocket requests from clients requests.
 func ServeWs(wsServer *WsServer, ctx echo.Context) error {
-
 	name := ctx.QueryParams()["name"]
-
-	if len(name[0]) < 1 {
-		err := errors.New(("Url Param 'name' is missing"))
+	c := ctx.Request().Context()
+	userCtxValue := c.Value("user")
+	if userCtxValue == nil {
+		err := fmt.Errorf("Not authenticated")
 		log.Println(err)
 		return err
 	}
+
+	userId := userCtxValue.(int64)
 
 	conn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
@@ -152,7 +157,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 		return err
 	}
 
-	client := newClient(conn, wsServer, name[0])
+	client := newClient(conn, wsServer, name[0], userId)
 
 	go client.writePump()
 	go client.readPump(ctx.Request().Context())
@@ -197,7 +202,8 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 // Refactored method
 // Use new joinRoom method
 func (client *Client) handleJoinRoomMessage(message Message, ctx context.Context) {
-	roomName := message.Message
+	//roomName := message.Message
+	roomName := message.Target.Name
 
 	client.joinRoom(roomName, 0, ctx)
 }

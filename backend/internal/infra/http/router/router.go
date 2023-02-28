@@ -15,10 +15,6 @@ import (
 	"strconv"
 )
 
-type contextKey string
-
-const UserContextKey = contextKey("user")
-
 func New(userController controllers.UserController,
 	authController controllers.AuthController,
 	imageController controllers.ImageController,
@@ -64,8 +60,10 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			if err != nil {
 				controllers.FormatedResponse(c, nethttp.StatusForbidden, err)
 			} else {
-				ctx := context.WithValue(c.Request().Context(), UserContextKey, userId)
-				c.Request().WithContext(ctx)
+				ctx := context.WithValue(c.Request().Context(), "user", userId)
+				//c.Request().WithContext(ctx)
+				//c.Request().Clone(ctx)
+				c.SetRequest(c.Request().WithContext(ctx))
 			}
 
 		} else {

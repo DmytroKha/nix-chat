@@ -4,6 +4,7 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/app"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
+	"github.com/DmytroKha/nix-chat/internal/infra/http/websocket"
 
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -12,12 +13,14 @@ import (
 type AuthController struct {
 	authService app.AuthService
 	userService app.UserService
+	wsServer    *websocket.WsServer
 }
 
-func NewAuthController(as app.AuthService, us app.UserService) AuthController {
+func NewAuthController(as app.AuthService, us app.UserService, ws *websocket.WsServer) AuthController {
 	return AuthController{
 		authService: as,
 		userService: us,
+		wsServer:    ws,
 	}
 }
 
@@ -48,6 +51,7 @@ func (c AuthController) Register(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
 	}
+	c.wsServer.AppendUser(user)
 	var authDto resources.AuthDto
 	return FormatedResponse(ctx, http.StatusCreated, authDto.DatabaseToDto(token, user))
 

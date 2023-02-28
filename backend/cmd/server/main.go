@@ -57,14 +57,14 @@ func main() {
 	userService := app.NewUserService(userRepository, imageService)
 	userController := controllers.NewUserController(userService)
 
-	authService := app.NewAuthService(userService, conf)
-	authController := controllers.NewAuthController(authService, userService)
-
 	roomRepository := database.NewRoomRepository(db)
 
 	var ctx = context.Background()
 	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository)
 	go wsServer.Run(ctx)
+
+	authService := app.NewAuthService(userService, conf)
+	authController := controllers.NewAuthController(authService, userService, wsServer)
 
 	e := router.New(
 		userController,
