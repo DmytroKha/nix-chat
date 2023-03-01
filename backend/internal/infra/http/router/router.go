@@ -11,6 +11,7 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/infra/http/websocket"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	nethttp "net/http"
 	"strconv"
 )
@@ -22,25 +23,22 @@ func New(userController controllers.UserController,
 	cf config.Configuration) *echo.Echo {
 
 	e := echo.New()
+	e.Use(middleware.Static("../frontend"))
 	e.GET("/ws", WsHandlerFunc(wsServer), AuthMiddleware)
 
 	api := e.Group("/api/v1")
-	//ws := api.Group("/ws")
 	auth := api.Group("/auth")
 	users := api.Group("/users")
 	images := users.Group("/:userId/image")
 
 	middlewares.SetMainMiddlewares(e)
 	middlewares.SetApiMiddlewares(api)
-	//middlewares.SetJWTMiddlewares(ws, cf)
 	middlewares.SetJWTMiddlewares(users, cf)
-	//middlewares.SetJWTMiddlewares(ws, cf)
 
 	http.MainGroup(e, authController)
 	http.AuthGroup(auth, authController)
 	http.UsersGroup(users, userController)
 	http.ImageGroup(images, imageController)
-	//http.ClientGroup(ws, wsServer)
 
 	return e
 }
@@ -61,8 +59,6 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				controllers.FormatedResponse(c, nethttp.StatusForbidden, err)
 			} else {
 				ctx := context.WithValue(c.Request().Context(), "user", userId)
-				//c.Request().WithContext(ctx)
-				//c.Request().Clone(ctx)
 				c.SetRequest(c.Request().WithContext(ctx))
 			}
 
