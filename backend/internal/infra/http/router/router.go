@@ -23,6 +23,7 @@ func New(userController controllers.UserController,
 	cf config.Configuration) *echo.Echo {
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.Use(middleware.Static("../frontend"))
 	e.GET("/ws", WsHandlerFunc(wsServer), AuthMiddleware)
 

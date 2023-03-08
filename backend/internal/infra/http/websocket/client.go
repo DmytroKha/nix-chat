@@ -7,6 +7,7 @@ import (
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/labstack/echo/v4"
 	"log"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -35,6 +36,9 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 // Client represents the websocket client at the server
@@ -140,7 +144,7 @@ func (client *Client) disconnect() {
 
 // ServeWs handles websocket requests from clients requests.
 func ServeWs(wsServer *WsServer, ctx echo.Context) error {
-	name := ctx.QueryParams()["name"]
+	//name := ctx.QueryParams()["name"]
 	c := ctx.Request().Context()
 	userCtxValue := c.Value("user")
 	if userCtxValue == nil {
@@ -150,6 +154,8 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 	}
 
 	userId := userCtxValue.(int64)
+	user := wsServer.findUserByID(userId)
+	name := user.Name
 
 	conn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
@@ -157,7 +163,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 		return err
 	}
 
-	client := newClient(conn, wsServer, name[0], userId)
+	client := newClient(conn, wsServer, name, userId)
 
 	go client.writePump()
 	go client.readPump(ctx.Request().Context())
@@ -202,8 +208,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 // Refactored method
 // Use new joinRoom method
 func (client *Client) handleJoinRoomMessage(message Message, ctx context.Context) {
-	//roomName := message.Message
-	roomName := message.Target.Name
+	roomName := message.Message
 
 	client.joinRoom(roomName, 0, ctx)
 }

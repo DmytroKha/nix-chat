@@ -1,10 +1,36 @@
+<template>
+  <HelloWorld />
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  }
+}
+</script>
+
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+
 body,
 html {
   height: 100%;
   margin: 0;
-  background: #03ea44;
-  background: -webkit-linear-gradient(to right, #0a8644, #22fa87, #0a8644);
-  background: linear-gradient(to right, #0a8644, #22fa87, #0a8644);
+  background: #0310ea;
+  background: -webkit-linear-gradient(to right, #560a86, #7122fa, #560a86);
+  background: linear-gradient(to right, #560a86, #7122fa, #560a86);
 }
 
 #app {
@@ -29,12 +55,12 @@ html {
 }
 
 .card.profile {
-  height:150px;
+  height: 150px;
   margin: 15px;
 }
 
-.card.profile .card-header{
-  color: #FFF;
+.card.profile .card-header {
+  color: #fff;
 }
 
 .msg_head {
@@ -120,3 +146,4 @@ html {
 .msg_head {
   position: relative;
 }
+</style>
