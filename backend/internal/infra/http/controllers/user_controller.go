@@ -6,7 +6,6 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"strconv"
 )
 
 type UserController struct {
@@ -33,11 +32,9 @@ func NewUserController(us app.UserService) UserController {
 // @Failure      404  {string}  echo.HTTPError
 // @Router       /users/{id} [get]
 func (u UserController) Find(ctx echo.Context) error {
-	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
-	}
-	user, err := u.userService.Find(id)
+	uid := ctx.Param("uid")
+
+	user, err := u.userService.Find(uid)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusNotFound, err)
 	}
@@ -65,13 +62,9 @@ func (u UserController) Find(ctx echo.Context) error {
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /users/{id}/change-pwd [put]
 func (u UserController) ChangePassword(ctx echo.Context) error {
-	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
-	}
-
+	uid := ctx.Param("uid")
 	var cpr requests.ChangePasswordRequest
-	err = ctx.Bind(&cpr)
+	err := ctx.Bind(&cpr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
 	}
@@ -79,7 +72,7 @@ func (u UserController) ChangePassword(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
 	}
-	updatedUser, err := u.userService.ChangePassword(id, cpr)
+	updatedUser, err := u.userService.ChangePassword(uid, cpr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusInternalServerError, err)
 	}
@@ -107,13 +100,10 @@ func (u UserController) ChangePassword(ctx echo.Context) error {
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /users/{id} [put]
 func (u UserController) Update(ctx echo.Context) error {
-	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
-	}
+	uid := ctx.Param("uid")
 
 	var usr requests.UserRequest
-	err = ctx.Bind(&usr)
+	err := ctx.Bind(&usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusBadRequest, err)
 	}
@@ -121,7 +111,7 @@ func (u UserController) Update(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
 	}
-	updatedUser, err := u.userService.Update(id, usr)
+	updatedUser, err := u.userService.Update(uid, usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusInternalServerError, err)
 	}

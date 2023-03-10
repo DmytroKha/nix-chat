@@ -6,6 +6,6 @@ import (
 )
 
 func AuthGroup(g *echo.Group, authController controllers.AuthController) {
-	g.POST("/register", authController.Register)
-	g.POST("/login", authController.Login)
+	g.POST("/register", authController.HandleRegister)
+	g.POST("/login", authController.HandleLogin)
 }

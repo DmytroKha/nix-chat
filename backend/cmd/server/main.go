@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/DmytroKha/nix-chat/config"
 	_ "github.com/DmytroKha/nix-chat/docs"
@@ -27,7 +28,14 @@ import (
 // @in                         header
 // @name                       Authorization
 func main() {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+	}()
 	var conf = config.GetConfiguration()
+
+	config.CreateRedisClient()
 
 	err := database.Migrate(conf)
 	if err != nil {
@@ -54,11 +62,13 @@ func main() {
 	userService := app.NewUserService(userRepository, imageService)
 	userController := controllers.NewUserController(userService)
 
-	authService := app.NewAuthService(userService, conf)
-	authController := controllers.NewAuthController(authService, userService)
+	roomRepository := database.NewRoomRepository(db)
 
-	wsServer := websocket.NewWebsocketServer()
-	go wsServer.Run()
+	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository)
+	go wsServer.Run(ctx)
+
+	authService := app.NewAuthService(userService, conf)
+	authController := controllers.NewAuthController(authService, userService, wsServer)
 
 	e := router.New(
 		userController,

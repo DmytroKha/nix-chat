@@ -7,6 +7,7 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
@@ -16,7 +17,7 @@ import (
 //go:generate mockery --dir . --name AuthService --output ./mocks
 type AuthService interface {
 	Register(user requests.UserRegistrationRequest) (database.User, string, error)
-	Login(user requests.UserRegistrationRequest) (database.User, string, error)
+	Login(user requests.UserLoginRequest) (database.User, string, error)
 	GenerateJwt(user database.User) (string, error)
 }
 
@@ -43,6 +44,8 @@ func (s authService) Register(usr requests.UserRegistrationRequest) (database.Us
 		log.Printf("invalid credentials")
 		return database.User{}, "", errors.New("invalid credentials")
 	}
+	u.Uid = uuid.New().String()
+
 	user, err := s.userService.Save(u)
 	if err != nil {
 		log.Print(err)
@@ -52,7 +55,7 @@ func (s authService) Register(usr requests.UserRegistrationRequest) (database.Us
 	return user, token, err
 }
 
-func (s authService) Login(usr requests.UserRegistrationRequest) (database.User, string, error) {
+func (s authService) Login(usr requests.UserLoginRequest) (database.User, string, error) {
 	user, err := usr.ToDatabaseModel()
 	if err != nil {
 		log.Printf("AuthService: login error %s", err)
@@ -73,6 +76,7 @@ func (s authService) Login(usr requests.UserRegistrationRequest) (database.User,
 
 func (s authService) GenerateJwt(user database.User) (string, error) {
 	claims := resources.JwtClaims{
+		ID:   user.Uid,
 		Name: user.Name,
 		StandardClaims: jwt.StandardClaims{
 			Id:        strconv.Itoa(int(user.Id)),

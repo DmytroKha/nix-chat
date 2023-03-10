@@ -11,10 +11,10 @@ import (
 //go:generate mockery --dir . --name UserService --output ./mocks
 type UserService interface {
 	Save(user database.User) (database.User, error)
-	Find(id int64) (database.User, error)
+	Find(uid string) (database.User, error)
 	FindByName(name string) (database.User, error)
-	ChangePassword(id int64, cpr requests.ChangePasswordRequest) (database.User, error)
-	Update(id int64, usr requests.UserRequest) (database.User, error)
+	ChangePassword(uid string, cpr requests.ChangePasswordRequest) (database.User, error)
+	Update(uid string, usr requests.UserRequest) (database.User, error)
 	LoadAvatar(user database.User) (database.User, error)
 	GeneratePasswordHash(password string) (string, error)
 }
@@ -46,8 +46,8 @@ func (s userService) Save(u database.User) (database.User, error) {
 	return user, nil
 }
 
-func (s userService) ChangePassword(id int64, cpr requests.ChangePasswordRequest) (database.User, error) {
-	user, err := s.Find(id)
+func (s userService) ChangePassword(uid string, cpr requests.ChangePasswordRequest) (database.User, error) {
+	user, err := s.Find(uid)
 	if err != nil {
 		log.Printf("UserService: %s", err)
 		return database.User{}, err
@@ -70,14 +70,14 @@ func (s userService) ChangePassword(id int64, cpr requests.ChangePasswordRequest
 	return updatedUser, nil
 }
 
-func (s userService) Update(id int64, usr requests.UserRequest) (database.User, error) {
+func (s userService) Update(uid string, usr requests.UserRequest) (database.User, error) {
 	var (
 		err    error
 		image  database.Image
 		images []database.Image
 	)
 
-	user, err := s.Find(id)
+	user, err := s.Find(uid)
 	if err != nil {
 		log.Printf("UserService: %s", err)
 		return database.User{}, err
@@ -123,8 +123,8 @@ func (s userService) Update(id int64, usr requests.UserRequest) (database.User, 
 	return updatedUser, nil
 }
 
-func (s userService) Find(id int64) (database.User, error) {
-	user, err := s.userRepo.Find(id)
+func (s userService) Find(uid string) (database.User, error) {
+	user, err := s.userRepo.Find(uid)
 	if err != nil {
 		log.Printf("UserService: %s", err)
 		return database.User{}, err

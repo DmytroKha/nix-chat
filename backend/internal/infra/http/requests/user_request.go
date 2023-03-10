@@ -10,8 +10,14 @@ type UserRequest struct {
 }
 
 type UserRegistrationRequest struct {
+	Password        string `json:"password" validate:"required,alphanum,gte=6"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,alphanum,gte=6"`
+	Name            string `json:"username" validate:"required"`
+}
+
+type UserLoginRequest struct {
 	Password string `json:"password" validate:"required,alphanum,gte=6"`
-	Name     string `json:"name" validate:"required"`
+	Name     string `json:"username" validate:"required"`
 }
 
 type ChangePasswordRequest struct {
@@ -20,6 +26,13 @@ type ChangePasswordRequest struct {
 }
 
 func (r UserRegistrationRequest) ToDatabaseModel() (database.User, error) {
+	return database.User{
+		Password: r.Password,
+		Name:     r.Name,
+	}, nil
+}
+
+func (r UserLoginRequest) ToDatabaseModel() (database.User, error) {
 	return database.User{
 		Password: r.Password,
 		Name:     r.Name,
