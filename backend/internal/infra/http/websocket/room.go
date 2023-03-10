@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/DmytroKha/nix-chat/config"
+	"github.com/google/uuid"
 	"log"
 )
 
 const welcomeMessage = "%s joined the room"
 
 type Room struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
@@ -22,7 +23,7 @@ type Room struct {
 // NewRoom creates a new Room
 func NewRoom(name string, private bool) *Room {
 	return &Room{
-		//ID:         uuid.New(),
+		ID:         uuid.New(),
 		Name:       name,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
@@ -81,8 +82,8 @@ func (room *Room) notifyClientJoined(client *Client) {
 	room.broadcastToClientsInRoom(message.encode())
 }
 
-func (room *Room) GetId() int64 {
-	return room.ID
+func (room *Room) GetId() string {
+	return room.ID.String()
 }
 
 func (room *Room) GetName() string {

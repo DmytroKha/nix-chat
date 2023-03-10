@@ -5,10 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
-const RoomTableName = "chat_list"
+const RoomTableName = "rooms"
 
 type Room struct {
 	Id      int64 `gorm:"primary_key;auto_increment;not_null"`
+	Uid     string
 	Name    string
 	Private bool
 }
@@ -23,8 +24,8 @@ func NewRoomRepository(dbSession *gorm.DB) domain.RoomRepository {
 	}
 }
 
-func (room *Room) GetId() int64 {
-	return room.Id
+func (room *Room) GetId() string {
+	return room.Uid
 }
 
 func (room *Room) GetName() string {
@@ -36,7 +37,11 @@ func (room *Room) GetPrivate() bool {
 }
 
 func (rr roomRepository) Save(r domain.Room) (domain.Room, error) {
-	err := rr.sess.Table(RoomTableName).Create(&r).Error
+	var room Room
+	room.Uid = r.GetId()
+	room.Name = r.GetName()
+	room.Private = r.GetPrivate()
+	err := rr.sess.Table(RoomTableName).Create(&room).Error
 	if err != nil {
 		return nil, err
 	}

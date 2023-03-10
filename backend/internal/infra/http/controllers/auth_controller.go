@@ -111,11 +111,12 @@ func (c AuthController) HandleRegister(ctx echo.Context) error {
 		return err
 	}
 
-	_, token, err := c.authService.Register(usr)
+	user, token, err := c.authService.Register(usr)
 	if err != nil {
 		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
 		return err
 	}
+	c.wsServer.AppendUser(&user)
 
 	ctx.Response().Write([]byte(token))
 

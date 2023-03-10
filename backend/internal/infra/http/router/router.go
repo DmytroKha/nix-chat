@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/DmytroKha/nix-chat/config"
+	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/http"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/controllers"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/middlewares"
@@ -13,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	nethttp "net/http"
-	"strconv"
 )
 
 func New(userController controllers.UserController,
@@ -55,11 +55,11 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		token, tok := c.Request().URL.Query()["bearer"]
 
 		if tok && len(token) == 1 {
-			userId, err := ValidateToken(token[0])
+			user, err := ValidateToken(token[0])
 			if err != nil {
 				controllers.FormatedResponse(c, nethttp.StatusForbidden, err)
 			} else {
-				ctx := context.WithValue(c.Request().Context(), "user", userId)
+				ctx := context.WithValue(c.Request().Context(), "user", user)
 				c.SetRequest(c.Request().WithContext(ctx))
 			}
 
@@ -70,7 +70,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func ValidateToken(tokenString string) (int64, error) {
+func ValidateToken(tokenString string) (domain.User, error) {
 	var conf = config.GetConfiguration()
 	token, err := jwt.ParseWithClaims(tokenString, &resources.JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
@@ -83,9 +83,8 @@ func ValidateToken(tokenString string) (int64, error) {
 	})
 
 	if claims, ok := token.Claims.(*resources.JwtClaims); ok && token.Valid {
-		userId, _ := strconv.Atoi(claims.Id)
-		return int64(userId), nil
+		return claims, nil
 	} else {
-		return 0, err
+		return nil, err
 	}
 }

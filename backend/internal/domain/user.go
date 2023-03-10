@@ -1,9 +1,9 @@
 package domain
 
-//type User interface {
-//	GetId() int64
-//	GetName() string
-//}
+type User interface {
+	GetId() string
+	GetName() string
+}
 
 //type UserRepository interface {
 //	AddUser(user User)

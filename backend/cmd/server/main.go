@@ -28,6 +28,11 @@ import (
 // @in                         header
 // @name                       Authorization
 func main() {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+	}()
 	var conf = config.GetConfiguration()
 
 	config.CreateRedisClient()
@@ -59,7 +64,6 @@ func main() {
 
 	roomRepository := database.NewRoomRepository(db)
 
-	var ctx = context.Background()
 	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository)
 	go wsServer.Run(ctx)
 

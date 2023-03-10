@@ -6,19 +6,20 @@ import (
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
+	"github.com/google/uuid"
 	"log"
-	"strconv"
 )
 
 const PubSubGeneralChannel = "general"
 
 type WsServer struct {
-	clients        map[*Client]bool
-	register       chan *Client
-	unregister     chan *Client
-	broadcast      chan []byte
-	rooms          map[*Room]bool
-	users          []database.User
+	clients    map[*Client]bool
+	register   chan *Client
+	unregister chan *Client
+	broadcast  chan []byte
+	rooms      map[*Room]bool
+	//users          []database.User
+	users          []domain.User
 	roomRepository domain.RoomRepository
 	userRepository database.UserRepository
 }
@@ -91,24 +92,30 @@ func (server *WsServer) createRoom(name string, private bool, ctx context.Contex
 }
 
 func (server *WsServer) listOnlineClients(client *Client) {
-	var uniqueUsers = make(map[int64]bool)
+	var uniqueUsers = make(map[string]bool)
 	for _, user := range server.users {
-		if ok := uniqueUsers[user.Id]; !ok {
+		if ok := uniqueUsers[user.GetId()]; !ok {
+			//if ok := uniqueUsers[user.Id]; !ok {
 			message := &Message{
-				Action:   UserJoinedAction,
-				SenderId: user.Id,
+				Action: UserJoinedAction,
+				Sender: user,
+				//SenderId: user.Id,
 			}
-			uniqueUsers[user.Id] = true
+			uniqueUsers[user.GetId()] = true
+			//uniqueUsers[user.Id] = true
 			client.send <- message.encode()
 		}
 	}
 }
 
 func (server *WsServer) registerClient(client *Client, ctx context.Context) {
-	var emptyUser database.User
-	if user := server.findUserByID(client.ID); user == emptyUser {
+	uid := client.ID.String()
+	if user := server.findUserByID(uid); user == nil {
 		// Add user to the repo
-		server.userRepository.Save(user)
+		var userRepo database.User
+		userRepo.Uid = client.GetId()
+		userRepo.Name = client.GetName()
+		server.userRepository.Save(userRepo)
 	}
 
 	// Publish user in PubSub
@@ -116,6 +123,7 @@ func (server *WsServer) registerClient(client *Client, ctx context.Context) {
 
 	server.listOnlineClients(client)
 	server.clients[client] = true
+
 }
 
 func (server *WsServer) unregisterClient(client *Client, ctx context.Context) {
@@ -126,7 +134,7 @@ func (server *WsServer) unregisterClient(client *Client, ctx context.Context) {
 	}
 }
 
-func (server *WsServer) findRoomByID(ID int64) *Room {
+func (server *WsServer) findRoomByID(ID string) *Room {
 	var foundRoom *Room
 	for room := range server.rooms {
 		if room.GetId() == ID {
@@ -138,10 +146,10 @@ func (server *WsServer) findRoomByID(ID int64) *Room {
 	return foundRoom
 }
 
-func (server *WsServer) findClientByID(ID int64) *Client {
+func (server *WsServer) findClientByID(ID string) *Client {
 	var foundClient *Client
 	for client := range server.clients {
-		if client.ID == ID {
+		if client.GetId() == ID {
 			foundClient = client
 			break
 		}
@@ -156,7 +164,7 @@ func (server *WsServer) runRoomFromRepository(name string, ctx context.Context) 
 	dbRoom, _ := server.roomRepository.FindByName(name)
 	if dbRoom != nil {
 		room = NewRoom(dbRoom.GetName(), dbRoom.GetPrivate())
-		room.ID = dbRoom.GetId()
+		room.ID, _ = uuid.Parse(dbRoom.GetId())
 
 		go room.RunRoom(ctx)
 		server.rooms[room] = true
@@ -170,8 +178,8 @@ func (server *WsServer) publishClientJoined(client *Client, ctx context.Context)
 
 	message := &Message{
 		Action: UserJoinedAction,
-		//Sender: client,
-		SenderId: client.ID,
+		Sender: client,
+		//SenderId: client.ID,
 	}
 
 	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
@@ -184,8 +192,8 @@ func (server *WsServer) publishClientLeft(client *Client, ctx context.Context) {
 
 	message := &Message{
 		Action: UserLeftAction,
-		//Sender: client,
-		SenderId: client.ID,
+		Sender: client,
+		//SenderId: client.ID,
 	}
 
 	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
@@ -222,23 +230,21 @@ func (server *WsServer) listenPubSubChannel(ctx context.Context) {
 
 func (server *WsServer) handleUserJoined(message Message) {
 	// Add the user to the slice
-	//server.users = append(server.users, message.Sender)
-	user, err := server.userRepository.Find(message.SenderId)
-	if err != nil {
-		log.Printf("handleUserJoined: %s", err)
-	}
-	server.users = append(server.users, user)
+	server.users = append(server.users, message.Sender)
+	//user, err := server.userRepository.Find(message.SenderId)
+	//if err != nil {
+	//	log.Printf("handleUserJoined: %s", err)
+	//}
+	//server.users = append(server.users, user)
 	server.broadcastToClients(message.encode())
+
 }
 
 func (server *WsServer) handleUserLeft(message Message) {
 	// Remove the user from the slice
 	for i, user := range server.users {
-		//if user.GetId() == message.Sender.GetId() {
-		//	server.users[i] = server.users[len(server.users)-1]
-		//	server.users = server.users[:len(server.users)-1]
-		//}
-		if user.Id == message.SenderId {
+		if user.GetId() == message.Sender.GetId() {
+			//if user.Id == message.SenderId {
 			server.users[i] = server.users[len(server.users)-1]
 			server.users = server.users[:len(server.users)-1]
 			break // added this break to only remove the first occurrence
@@ -247,10 +253,13 @@ func (server *WsServer) handleUserLeft(message Message) {
 	server.broadcastToClients(message.encode())
 }
 
-func (server *WsServer) findUserByID(ID int64) database.User {
-	var foundUser database.User
+func (server *WsServer) findUserByID(ID string) domain.User {
+	var foundUser domain.User
+	//var foundUser database.User
 	for _, client := range server.users {
-		if client.Id == ID {
+		uid := client.GetId()
+		if uid == ID {
+			//if client.Id == ID {
 			foundUser = client
 			break
 		}
@@ -260,24 +269,27 @@ func (server *WsServer) findUserByID(ID int64) database.User {
 }
 
 func (server *WsServer) handleUserJoinPrivate(message Message, ctx context.Context) {
-	clientId, _ := strconv.Atoi(message.Message)
-	targetClients := server.findClientsByID(int64(clientId))
+	//clientId, _ := strconv.Atoi(message.Message)
+	targetClients := server.findClientsByID(message.Message)
+	//targetClients := server.findClientsByID(int64(clientId))
 	for _, targetClient := range targetClients {
-		targetClient.joinRoom(message.Target.GetName(), message.SenderId, ctx)
+		//targetClient.joinRoom(message.Target.GetName(), message.SenderId, ctx)
+		targetClient.joinRoom(message.Target.GetName(), message.Sender, ctx)
 	}
 }
 
-func (server *WsServer) findClientsByID(ID int64) []*Client {
+func (server *WsServer) findClientsByID(ID string) []*Client {
 	var foundClients []*Client
 	for client := range server.clients {
-		if client.ID == ID {
+		if client.GetId() == ID {
 			foundClients = append(foundClients, client)
 		}
 	}
 
 	return foundClients
+
 }
 
-func (server *WsServer) AppendUser(user database.User) {
+func (server *WsServer) AppendUser(user domain.User) {
 	server.users = append(server.users, user)
 }

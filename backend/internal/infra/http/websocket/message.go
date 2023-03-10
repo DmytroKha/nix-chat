@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"github.com/DmytroKha/nix-chat/internal/domain"
 	"log"
 )
 
@@ -14,11 +15,11 @@ const JoinRoomPrivateAction = "join-room-private"
 const RoomJoinedAction = "room-joined"
 
 type Message struct {
-	Action  string `json:"action"`
-	Message string `json:"message"`
-	Target  *Room  `json:"target"`
-	//Sender  domain.User `json:"sender"`
-	SenderId int64 `json:"senderId"`
+	Action  string      `json:"action"`
+	Message string      `json:"message"`
+	Target  *Room       `json:"target"`
+	Sender  domain.User `json:"sender"`
+	//SenderId int64 `json:"senderId"`
 }
 
 func (message *Message) encode() []byte {
@@ -34,8 +35,8 @@ func (message *Message) encode() []byte {
 func (message *Message) UnmarshalJSON(data []byte) error {
 	type Alias Message
 	msg := &struct {
-		//Sender Client `json:"sender"`
-		SenderId int64 `json:"senderId"`
+		Sender Client `json:"sender"`
+		//SenderId int64 `json:"senderId"`
 		*Alias
 	}{
 		Alias: (*Alias)(message),
@@ -43,7 +44,7 @@ func (message *Message) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &msg); err != nil {
 		return err
 	}
-	//message.Sender = &msg.Sender
-	message.SenderId = msg.SenderId
+	message.Sender = &msg.Sender
+	//message.SenderId = msg.SenderId
 	return nil
 }
