@@ -11,7 +11,7 @@ type UserRequest struct {
 
 type UserRegistrationRequest struct {
 	Password        string `json:"password" validate:"required,alphanum,gte=6"`
-	ConfirmPassword string `json:"confirm_password" validate:"required,alphanum,gte=6"`
+	ConfirmPassword string `json:"confirmPassword" validate:"required,alphanum,gte=6"`
 	Name            string `json:"username" validate:"required"`
 }
 

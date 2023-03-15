@@ -29,12 +29,12 @@ func New(userController controllers.UserController,
 
 	api := e.Group("/api/v1")
 	auth := api.Group("/auth")
-	users := api.Group("/users")
-	images := users.Group("/:userId/image")
+	users := api.Group("/users", AuthMiddleware)
+	images := users.Group("/:userId/image", AuthMiddleware)
 
 	middlewares.SetMainMiddlewares(e)
 	middlewares.SetApiMiddlewares(api)
-	middlewares.SetJWTMiddlewares(users, cf)
+	//middlewares.SetJWTMiddlewares(users, cf)
 
 	http.MainGroup(e, authController)
 	http.AuthGroup(auth, authController)

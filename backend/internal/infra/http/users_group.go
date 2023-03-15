@@ -6,7 +6,7 @@ import (
 )
 
 func UsersGroup(g *echo.Group, userController controllers.UserController) {
-	g.GET("/:id", userController.Find)
-	g.PUT("/:id/change-pwd", userController.ChangePassword)
-	g.PUT("/:id", userController.Update)
+	g.GET("/me", userController.Find)
+	g.PUT("/change-pwd", userController.ChangePassword)
+	g.PUT("/change-name", userController.ChangeName)
 }

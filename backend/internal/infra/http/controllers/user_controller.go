@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/DmytroKha/nix-chat/internal/app"
+	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 )
 
@@ -46,42 +49,79 @@ func (u UserController) Find(ctx echo.Context) error {
 	return FormatedResponse(ctx, http.StatusOK, userDto.DatabaseToDto(user))
 }
 
-// ChangePass godoc
-// @Summary      Change password for user google acc
-// @Security     ApiKeyAuth
-// @Description  change password for user google acc
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Produce      xml
-// @Param        id   path      string  true  "User ID"
-// @Param        input   body      requests.ChangePasswordRequest  true  "User body"
-// @Success      200  {object}  resources.UserDto
-// @Failure      400  {string}  echo.HTTPError
-// @Failure      422  {string}  echo.HTTPError
-// @Failure      500  {string}  echo.HTTPError
-// @Router       /users/{id}/change-pwd [put]
 func (u UserController) ChangePassword(ctx echo.Context) error {
-	uid := ctx.Param("uid")
-	var cpr requests.ChangePasswordRequest
-	err := ctx.Bind(&cpr)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
+
+	userCtxValue := ctx.Request().Context().Value("user")
+	if userCtxValue == nil {
+		err := fmt.Errorf("Not authenticated")
+		log.Println(err)
+		return err
 	}
-	err = ctx.Validate(&cpr)
+	user := userCtxValue.(domain.User)
+	uid := user.GetId()
+
+	var usr requests.ChangePasswordRequest
+	err := ctx.Bind(&usr)
 	if err != nil {
-		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
 	}
-	updatedUser, err := u.userService.ChangePassword(uid, cpr)
+
+	err = ctx.Validate(&usr)
 	if err != nil {
-		return FormatedResponse(ctx, http.StatusInternalServerError, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusUnprocessableEntity)
+		return err
 	}
-	updatedUser, err = u.userService.LoadAvatar(updatedUser)
+
+	updatedUser, err := u.userService.ChangePassword(uid, usr)
 	if err != nil {
-		return FormatedResponse(ctx, http.StatusInternalServerError, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
 	}
-	var userDto resources.UserDto
-	return FormatedResponse(ctx, http.StatusOK, userDto.DatabaseToDto(updatedUser))
+
+	ctx.Response().Write([]byte(updatedUser.Password))
+
+	return nil
+}
+
+func (u UserController) ChangeName(ctx echo.Context) error {
+
+	userCtxValue := ctx.Request().Context().Value("user")
+	if userCtxValue == nil {
+		err := fmt.Errorf("Not authenticated")
+		log.Println(err)
+		return err
+	}
+	user := userCtxValue.(domain.User)
+	uid := user.GetId()
+
+	var usr requests.UserRequest
+	err := ctx.Bind(&usr)
+	if err != nil {
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
+	}
+
+	err = ctx.Validate(&usr)
+	if err != nil {
+		returnErrorResponse(ctx.Response().Writer, http.StatusUnprocessableEntity)
+		return err
+	}
+
+	if user.GetName() == usr.Name {
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
+	}
+
+	updatedUser, err := u.userService.ChangeName(uid, usr.Name)
+	if err != nil {
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
+	}
+
+	ctx.Response().Write([]byte(updatedUser.Password))
+
+	return nil
 }
 
 // ChangeLogin godoc
