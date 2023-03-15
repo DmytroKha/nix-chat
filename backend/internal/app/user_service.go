@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"golang.org/x/crypto/bcrypt"
@@ -14,6 +15,7 @@ type UserService interface {
 	Find(uid string) (database.User, error)
 	FindByName(name string) (database.User, error)
 	ChangePassword(uid string, cpr requests.ChangePasswordRequest) (database.User, error)
+	ChangeName(uid, name string) (database.User, error)
 	Update(uid string, usr requests.UserRequest) (database.User, error)
 	LoadAvatar(user database.User) (database.User, error)
 	GeneratePasswordHash(password string) (string, error)
@@ -62,6 +64,35 @@ func (s userService) ChangePassword(uid string, cpr requests.ChangePasswordReque
 		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
+	updatedUser, err := s.userRepo.Update(user)
+	if err != nil {
+		log.Print(err)
+		return database.User{}, err
+	}
+	return updatedUser, nil
+}
+
+func (s userService) ChangeName(uid, name string) (database.User, error) {
+	emptyUser := database.User{}
+	user, err := s.Find(uid)
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return database.User{}, err
+	}
+	anotherUser, err := s.FindByName(name)
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return database.User{}, err
+	}
+
+	if anotherUser != emptyUser {
+		err = fmt.Errorf("this name is alreadyused")
+		log.Printf("UserService: %s", err)
+		return database.User{}, err
+	}
+
+	user.Name = name
+
 	updatedUser, err := s.userRepo.Update(user)
 	if err != nil {
 		log.Print(err)
