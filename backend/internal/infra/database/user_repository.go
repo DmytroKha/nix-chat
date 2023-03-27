@@ -42,12 +42,20 @@ func NewUserRepository(dbSession *gorm.DB) UserRepository {
 	}
 }
 
-func (user *User) GetId() string {
+func (user *User) GetId() int64 {
+	return user.Id
+}
+
+func (user *User) GetUid() string {
 	return user.Uid
 }
 
 func (user *User) GetName() string {
 	return user.Name
+}
+
+func (user *User) GetPhoto() string {
+	return user.Image.Name
 }
 
 func (r userRepository) Save(u User) (User, error) {

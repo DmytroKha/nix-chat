@@ -66,6 +66,11 @@ func (s authService) Login(usr requests.UserLoginRequest) (database.User, string
 		log.Printf("AuthService: login error %s", err)
 		return database.User{}, "", err
 	}
+	u, err = s.userService.LoadAvatar(u)
+	if err != nil {
+		log.Printf("AuthService: login error %s", err)
+		return database.User{}, "", err
+	}
 	valid := s.checkPasswordHash(user.Password, u.Password)
 	if !valid {
 		return database.User{}, "", errors.New("invalid credentials")
@@ -76,8 +81,10 @@ func (s authService) Login(usr requests.UserLoginRequest) (database.User, string
 
 func (s authService) GenerateJwt(user database.User) (string, error) {
 	claims := resources.JwtClaims{
-		ID:   user.Uid,
-		Name: user.Name,
+		ID:    user.Id,
+		Uid:   user.Uid,
+		Name:  user.Name,
+		Photo: user.Image.Name,
 		StandardClaims: jwt.StandardClaims{
 			Id:        strconv.Itoa(int(user.Id)),
 			ExpiresAt: time.Now().Add(s.config.JwtTTL).Unix(),

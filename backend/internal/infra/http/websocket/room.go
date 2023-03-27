@@ -82,7 +82,7 @@ func (room *Room) notifyClientJoined(client *Client) {
 	room.broadcastToClientsInRoom(message.encode())
 }
 
-func (room *Room) GetId() string {
+func (room *Room) GetUid() string {
 	return room.ID.String()
 }
 

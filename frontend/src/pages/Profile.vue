@@ -10,6 +10,7 @@
 
           <div>
             <h2>Change avatar</h2>
+            <img :src="user.photo"/>
             <input
               type="file"
               id="avatar"
@@ -60,6 +61,10 @@
               </div>
             </div>
           </div>
+
+          <div class="alert alert-danger" role="alert" v-show="profileError">
+            {{ profileError }}
+          </div>
         </div>
       </div>
     </div>
@@ -68,31 +73,35 @@
 
 <script>
 import router from "../router";
+import { wsConnect } from "@/services/WSConnectService";
 export default {
   name: "ProfilePage",
   data() {
     return {
       user: {
         name: "",
-        username: "",
-        password: "",
-        confirmPassword: "",
         oldPassword: "",
         newPassword: "",
-        token: "",
-        friends: [],
-        foes: [],
+        photo: "",
       },
+      // name: "",
+      // oldPassword: "",
+      // newPassword: "",
+      // avatarLink: "",
       profileError: "",
     };
   },
   beforeMount() {
-    this.getUserData();
+    //this.getUserData();
   },
   mounted: function () {
-    this.user.name = localStorage.getItem('name');
-    this.user.token = localStorage.getItem('token');
-    this.user.uid = localStorage.getItem('uid');
+    this.user.name = wsConnect.user.name;
+    //this.user.photo = "./logo1.png"
+    this.user.photo = wsConnect.user.photo
+    //this.user.photo = "./.../6b3bcfca-a5cb-4b38-bd32-327a70d8853e.png"
+    console.log("photo", this.user.photo)
+    // this.user.token = localStorage.getItem('token');
+    // this.user.uid = localStorage.getItem('uid');
   },
   methods: {
     navigate() {
@@ -101,29 +110,29 @@ export default {
       //localStorage.removeItem('token');
       //localStorage.removeItem('uid');
     },
-    async getUserData() {
-      try {
-        const result = await this.axios.get(
-          "http://localhost:8080/api/v1/users/me"
-        );
-        if (
-          result.data.status !== "undefined" &&
-          result.data.status == "error"
-        ) {
-          console.log("Change password failed 1");
-        } else {
-          this.user = result.data;
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    },
+    // async getUserData() {
+    //   try {
+    //     const result = await this.axios.get(
+    //       "http://localhost:8080/api/v1/users/me"
+    //     );
+    //     if (
+    //       result.data.status !== "undefined" &&
+    //       result.data.status == "error"
+    //     ) {
+    //       console.log("Change password failed 1");
+    //     } else {
+    //       this.user = result.data;
+    //     }
+    //   } catch (e) {
+    //     console.log(e);
+    //   }
+    // },
     async changePass() {
       try {
         const result = await this.axios.put(
           "http://localhost:8080/api/v1/users/change-pwd?bearer=" +
-            this.user.token,
-          this.user
+            wsConnect.user.token,
+            this.user
         );
         if (
           result.data.status !== "undefined" &&
@@ -131,7 +140,7 @@ export default {
         ) {
           this.profileError = "Change password failed 1";
         } else {
-          this.user.password = result.data;
+          this.profileError = "Password was changed successfully";
         }
       } catch (e) {
         this.profileError = "Change password failed 2";
@@ -141,8 +150,9 @@ export default {
     async changeName() {
       try {
         const result = await this.axios.put(
-          "http://localhost:8080/api/v1/users/change-name",
-          this.user
+          "http://localhost:8080/api/v1/users/change-name?bearer=" +
+            wsConnect.user.token,
+            this.user
         );
         if (
           result.data.status !== "undefined" &&
@@ -150,18 +160,33 @@ export default {
         ) {
           this.profileError = "Change name failed";
         } else {
-          this.user.name = result.data;
+          wsConnect.user.name = result.data;
+          for (let i = 0; i < wsConnect.users.length; i++) {
+            if (wsConnect.users[i].id == wsConnect.user.uid) {
+              wsConnect.ws.send(
+                  JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })
+              );
+              wsConnect.users[i].name = wsConnect.user.name;
+              wsConnect.ws.send(
+                  JSON.stringify({ action: "user-join", sender: wsConnect.users[i]})
+              );
+              break;
+            }
+          }
+          this.profileError = "Name was changed successfully";
         }
       } catch (e) {
         this.profileError = "Change name failed";
         console.log(e);
       }
     },
-    async changeAvatar() {
+    async changeAvatar(e) {
+      console.log(e.target.files[0].arrayBuffer())
       try {
-        const result = await this.axios.post(
-          "http://localhost:8080/api/v1/users/change_avtr",
-          this.user
+        const result = await this.axios.put(
+          "http://localhost:8080/api/v1/users/change_avtr?bearer=" +
+            wsConnect.user.token,
+            e.target.files[0].arrayBuffer()
         );
         if (
           result.data.status !== "undefined" &&
@@ -169,7 +194,19 @@ export default {
         ) {
           this.profileError = "Change avatar failed";
         } else {
-          this.user.name = result.data;
+          wsConnect.user.photo = result.data
+          for (let i = 0; i < wsConnect.users.length; i++) {
+            if (wsConnect.users[i].id == wsConnect.user.uid) {
+              wsConnect.ws.send(
+                  JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })
+              );
+              wsConnect.users[i].photo = wsConnect.user.photo;
+              wsConnect.ws.send(
+                  JSON.stringify({ action: "user-join", sender: wsConnect.users[i]})
+              );
+              break;
+            }}
+          this.profileError = "Avatar was changed successfully";
         }
       } catch (e) {
         this.profileError = "Change avatar failed";

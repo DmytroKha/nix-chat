@@ -25,12 +25,13 @@ func New(userController controllers.UserController,
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.Use(middleware.Static("../frontend"))
+	//e.Use(middleware.Static("../backend/file_storage"))
 	e.GET("/ws", WsHandlerFunc(wsServer), AuthMiddleware)
 
 	api := e.Group("/api/v1")
 	auth := api.Group("/auth")
 	users := api.Group("/users", AuthMiddleware)
-	images := users.Group("/:userId/image", AuthMiddleware)
+	//images := users.Group("/change_avtr", AuthMiddleware)
 
 	middlewares.SetMainMiddlewares(e)
 	middlewares.SetApiMiddlewares(api)
@@ -38,8 +39,8 @@ func New(userController controllers.UserController,
 
 	http.MainGroup(e, authController)
 	http.AuthGroup(auth, authController)
-	http.UsersGroup(users, userController)
-	http.ImageGroup(images, imageController)
+	http.UsersGroup(users, userController, imageController)
+	//http.ImageGroup(images, imageController)
 
 	return e
 }

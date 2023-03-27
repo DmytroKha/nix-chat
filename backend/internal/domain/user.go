@@ -1,8 +1,11 @@
 package domain
 
 type User interface {
-	GetId() string
+	//
+	GetUid() string
 	GetName() string
+	GetPhoto() string
+	GetId() int64
 }
 
 //type UserRepository interface {

@@ -23,8 +23,10 @@ type AuthDto struct {
 }
 
 type JwtClaims struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID    int64  `json:"id"`
+	Uid   string `json:"uid"`
+	Name  string `json:"name"`
+	Photo string `json:"photo"`
 	jwt.StandardClaims
 }
 
@@ -32,12 +34,20 @@ type GoogleUrlDto struct {
 	Url string `json:"url"`
 }
 
-func (c *JwtClaims) GetId() string {
-	return c.ID
+func (c *JwtClaims) GetUid() string {
+	return c.Uid
 }
 
 func (c *JwtClaims) GetName() string {
 	return c.Name
+}
+
+func (c *JwtClaims) GetPhoto() string {
+	return c.Photo
+}
+
+func (c *JwtClaims) GetId() int64 {
+	return c.ID
 }
 
 func (d UserDto) DatabaseToDto(user database.User) UserDto {
