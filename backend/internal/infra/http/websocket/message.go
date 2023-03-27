@@ -15,12 +15,17 @@ const JoinRoomPrivateAction = "join-room-private"
 const RoomJoinedAction = "room-joined"
 const AddFriendAction = "add-friend"
 const AddFoeAction = "add-foe"
+const GetAllRooms = "all-rooms"
+const ChangeNameAction = "change-username"
+
+//const GetOnlineUsers = "on-line-users"
 
 type Message struct {
-	Action  string      `json:"action"`
-	Message string      `json:"message"`
-	Target  *Room       `json:"target"`
-	Sender  domain.User `json:"sender"`
+	Action  string        `json:"action"`
+	Message string        `json:"message"`
+	Target  *Room         `json:"target"`
+	Sender  domain.User   `json:"sender"`
+	Users   []domain.User `json:"users"`
 	//SenderId int64 `json:"senderId"`
 }
 

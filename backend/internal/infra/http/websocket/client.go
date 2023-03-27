@@ -50,10 +50,11 @@ type Client struct {
 	send     chan []byte
 	ID       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
+	Photo    string    `json:"photo"`
 	rooms    map[*Room]bool
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID string) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID string, photo string) *Client {
 	client := &Client{
 		Name:     name,
 		conn:     conn,
@@ -64,6 +65,10 @@ func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID string)
 
 	if ID != "" {
 		client.ID, _ = uuid.Parse(ID)
+	}
+
+	if photo != "" {
+		client.Photo = "../././file_storage/" + photo
 	}
 
 	return client
@@ -166,7 +171,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 		return err
 	}
 
-	client := newClient(conn, wsServer, user.GetName(), user.GetId())
+	client := newClient(conn, wsServer, user.GetName(), user.GetUid(), user.GetPhoto())
 
 	go client.writePump()
 	go client.readPump()
@@ -188,11 +193,13 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 		return
 	}
 
-	message.Sender = client
+	if message.Sender == nil || message.Sender.GetName() == "" {
+		message.Sender = client
+	}
 
 	switch message.Action {
 	case SendMessageAction:
-		roomID := message.Target.GetId()
+		roomID := message.Target.GetUid()
 		if room := client.wsServer.findRoomByID(roomID); room != nil {
 			room.broadcast <- &message
 		}
@@ -205,6 +212,18 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 
 	case JoinRoomPrivateAction:
 		client.handleJoinRoomPrivateMessage(message, ctx)
+
+	case GetAllRooms:
+		client.handleJoinAllRoomsMessage(message, ctx)
+
+		//case GetOnlineUsers:
+		//	client.handleJoinOnlineUsersMessage(ctx)
+	case UserJoinedAction:
+		client.handleUserJoinMessage(message)
+
+	case UserLeftAction:
+		client.handleUserLeaveMessage(message)
+
 	}
 
 }
@@ -216,6 +235,24 @@ func (client *Client) handleJoinRoomMessage(message Message, ctx context.Context
 
 	client.joinRoom(roomName, nil, ctx)
 }
+
+func (client *Client) handleJoinAllRoomsMessage(message Message, ctx context.Context) {
+	sender := message.Sender
+
+	client.joinToAllRooms(sender, ctx)
+}
+
+//func (client *Client) handleJoinOnlineUsersMessage(ctx context.Context) {
+//	//client.wsServer.publishClientJoined(client, ctx)
+//	//client.wsServer.listOnlineClients(client)
+//	//client.wsServer.checkOnlineClients(ctx)
+//	message := &Message{
+//		Action: GetOnlineUsers,
+//		Sender: client,
+//		Users:  client.wsServer.users,
+//	}
+//	client.send <- message.encode()
+//}
 
 // Refactored method
 // Added nil check
@@ -229,6 +266,43 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 	}
 
 	room.unregister <- client
+}
+
+func (client *Client) handleUserLeaveMessage(message Message) {
+	//client.wsServer.publishClientLeft(client, ctx)
+	//message := &Message{
+	//	Action: UserLeftAction,
+	//	Sender: client,
+	//}
+	//client.send <- message.encode()
+	//client.wsServer.handleUserLeft(message)
+	for i, user := range client.wsServer.users {
+		if user.GetUid() == message.Sender.GetUid() {
+			//if user.Id == message.SenderId {
+			client.wsServer.users[i] = client.wsServer.users[len(client.wsServer.users)-1]
+			client.wsServer.users = client.wsServer.users[:len(client.wsServer.users)-1]
+			break // added this break to only remove the first occurrence
+		}
+	}
+	client.wsServer.unregister <- client
+}
+
+func (client *Client) handleUserJoinMessage(message Message) {
+	//client.wsServer.publishClientJoined(client, ctx)
+	//message := &Message{
+	//	Action: UserJoinedAction,
+	//	Sender: client,
+	//}
+	//client.send <- message.encode()
+	//client.wsServer.handleUserJoined(message)
+
+	if client.ID.String() == message.Sender.GetUid() && client.Name != message.Sender.GetName() {
+		client.Name = message.Sender.GetName()
+	}
+	if client.ID.String() == message.Sender.GetUid() && client.Photo != message.Sender.GetPhoto() {
+		client.Photo = message.Sender.GetPhoto()
+	}
+	client.wsServer.register <- client
 }
 
 // New method
@@ -291,6 +365,28 @@ func (client *Client) joinRoom(roomName string, sender domain.User, ctx context.
 
 }
 
+func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
+	//func (client *Client) joinRoom(roomName string, senderId int64, ctx context.Context) *Room {
+
+	rooms := client.wsServer.findAllRooms(ctx)
+
+	// Don't allow to join private rooms through public room message
+	//if sender == nil && room.Private {
+	//	return nil
+	//}
+	for _, room := range rooms {
+		//client.rooms[room] = true
+		//room.register <- client
+		var r Room
+		r.ID, _ = uuid.Parse(room.GetUid())
+		r.Name = room.GetName()
+		r.Private = room.GetPrivate()
+
+		client.notifyGetAllRooms(&r, sender)
+	}
+
+}
+
 // New method
 // Check if the client is not yet in the room
 func (client *Client) isInRoom(room *Room) bool {
@@ -313,7 +409,18 @@ func (client *Client) notifyRoomJoined(room *Room, sender domain.User) {
 	client.send <- message.encode()
 }
 
-func (client *Client) GetId() string {
+func (client *Client) notifyGetAllRooms(room *Room, sender domain.User) {
+	message := Message{
+		Action: GetAllRooms,
+		Target: room,
+		Sender: sender,
+		//SenderId: senderId,
+	}
+
+	client.send <- message.encode()
+}
+
+func (client *Client) GetUid() string {
 	return client.ID.String()
 }
 
@@ -321,11 +428,19 @@ func (client *Client) GetName() string {
 	return client.Name
 }
 
+func (client *Client) GetPhoto() string {
+	return client.Photo
+}
+
+func (client *Client) GetId() int64 {
+	return 0
+}
+
 // Send out invite message over pub/sub in the general channel.
 func (client *Client) inviteTargetUser(target domain.User, room *Room, ctx context.Context) {
 	inviteMessage := &Message{
 		Action:  JoinRoomPrivateAction,
-		Message: target.GetId(),
+		Message: target.GetUid(),
 		Target:  room,
 		Sender:  client,
 		//SenderId: client.ID,

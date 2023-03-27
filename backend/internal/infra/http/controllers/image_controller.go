@@ -1,16 +1,17 @@
 package controllers
 
 import (
+	"fmt"
+	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/DmytroKha/nix-chat/internal/app"
-	"github.com/DmytroKha/nix-chat/internal/domain"
-	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
 	"github.com/google/uuid"
 )
 
@@ -24,37 +25,28 @@ func NewImageController(s app.ImageService) ImageController {
 	}
 }
 
-// AddImages godoc
-// @Summary      Add a new image
-// @Security     ApiKeyAuth
-// @Description  load a new image
-// @Tags         images
-// @Accept       png
-// @Accept       jpeg
-// @Produce      json
-// @Produce      xml
-// @Param        userId   path      string  true  "User ID"
-// @Param        formData   formData	file   true "The file to upload"	x-mimetype: image/png
-// @Success      201  {object}  resources.ImageDto
-// @Failure      400  {string}  echo.HTTPError
-// @Failure      422  {string}  echo.HTTPError
-// @Failure      500  {string}  echo.HTTPError
-// @Router       /users/{userId}/image [post]
 func (c ImageController) AddImage(ctx echo.Context) error {
-	userId, err := strconv.ParseInt(ctx.Param("userId"), 10, 64)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
+
+	userCtxValue := ctx.Request().Context().Value("user")
+	if userCtxValue == nil {
+		err := fmt.Errorf("Not authenticated")
+		log.Println(err)
+		return err
 	}
+	user := userCtxValue.(domain.User)
+	userId := user.GetId()
 
 	buff, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
 	}
 
 	filetype := http.DetectContentType(buff)
 
 	if filetype != "image/jpeg" && filetype != "image/png" {
-		return FormatedResponse(ctx, http.StatusForbidden, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusForbidden)
+		return err
 	}
 
 	img := database.Image{
@@ -64,11 +56,13 @@ func (c ImageController) AddImage(ctx echo.Context) error {
 
 	i, err := c.service.Save(img, buff)
 	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
+		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
+		return err
 	}
 
-	var imageDto resources.ImageDto
-	return FormatedResponse(ctx, http.StatusCreated, imageDto.DatabaseToDto(i))
+	ctx.Response().Write([]byte(i.Name))
+
+	return nil
 }
 
 func (c ImageController) DeleteImage(ctx echo.Context) error {

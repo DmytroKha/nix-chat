@@ -20,13 +20,14 @@ type Configuration struct {
 
 func GetConfiguration() Configuration {
 	return Configuration{
-		DatabaseName:        getOrFail("DB_NAME"),
-		DatabaseHost:        getOrFail("DB_HOST"),
-		DatabaseUser:        getOrFail("DB_USER"),
-		DatabasePassword:    getOrFail("DB_PASSWORD"),
-		MigrateToVersion:    getOrDefault("MIGRATE", "latest"),
-		MigrationLocation:   getOrDefault("MIGRATION_LOCATION", "migrations"),
-		FileStorageLocation: getOrDefault("FILES_LOCATION", "file_storage"),
+		DatabaseName:      getOrFail("DB_NAME"),
+		DatabaseHost:      getOrFail("DB_HOST"),
+		DatabaseUser:      getOrFail("DB_USER"),
+		DatabasePassword:  getOrFail("DB_PASSWORD"),
+		MigrateToVersion:  getOrDefault("MIGRATE", "latest"),
+		MigrationLocation: getOrDefault("MIGRATION_LOCATION", "migrations"),
+		//FileStorageLocation: getOrDefault("FILES_LOCATION", "file_storage"),
+		FileStorageLocation: getOrDefault("FILES_LOCATION", "../frontend/public/file_storage"),
 		JwtSecret:           getOrFail("JWT_SECRET"),
 		JwtTTL:              time.Hour * 24,
 	}

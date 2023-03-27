@@ -79,14 +79,10 @@ func (s userService) ChangeName(uid, name string) (database.User, error) {
 		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
-	anotherUser, err := s.FindByName(name)
-	if err != nil {
-		log.Printf("UserService: %s", err)
-		return database.User{}, err
-	}
+	anotherUser, _ := s.FindByName(name)
 
 	if anotherUser != emptyUser {
-		err = fmt.Errorf("this name is alreadyused")
+		err = fmt.Errorf("this name is already used")
 		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}

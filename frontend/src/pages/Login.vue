@@ -40,6 +40,7 @@
 
 <script>
 import router from "../router";
+import { wsConnect } from "@/services/WSConnectService";
 export default {
   name: "LoginPage",
   props: {
@@ -75,9 +76,6 @@ export default {
     navigate() {
       router.push({ path: "/register" });
     },
-    connect() {
-      this.connectToWebsocket();
-    },
     isDisabled() {
       return !(this.user.username !== "" && this.user.password !== "");
     },
@@ -94,12 +92,12 @@ export default {
         ) {
           this.loginError = "Login failed 1";
         } else {
-          this.user.token = result.data;
-          console.log(1,result.data)
-          console.log(2,this.user.token)
-          console.log(3,this.user.username)
-          localStorage.setItem('name', this.user.username);
-          localStorage.setItem('token', this.user.token);
+          wsConnect.user.token = result.data.token;
+          wsConnect.user.uid = result.data.uid;
+          wsConnect.user.name = this.user.username;
+          //localStorage.setItem('name', this.user.username);
+          //localStorage.setItem('token', this.user.token);
+          //localStorage.setItem('uid', result.data.uid);
           //this.connect();
           router.push({ path: "/dashboard" });
         }
@@ -108,40 +106,6 @@ export default {
         console.log(e);
         //router.push({ path: "/dashboard" });
       }
-    },
-    connectToWebsocket() {
-      if (this.user.token != "") {
-        this.ws = new WebSocket(this.serverUrl + "?bearer=" + this.user.token);
-      }
-      //else {
-        //this.ws = new WebSocket(this.serverUrl + "?name=" + this.user.name);
-      //}
-      this.ws.addEventListener("open", (event) => {
-        this.onWebsocketOpen(event);
-      });
-      this.ws.addEventListener("message", (event) => {
-        this.handleNewMessage(event);
-      });
-      this.ws.addEventListener("close", (event) => {
-        this.onWebsocketClose(event);
-      });
-    },
-    onWebsocketOpen() {
-      console.log("connected to WS!");
-      this.currentReconnectDelay = 1000;
-    },
-    onWebsocketClose() {
-      this.ws = null;
-
-      setTimeout(() => {
-        this.reconnectToWebsocket();
-      }, this.currentReconnectDelay);
-    },
-    reconnectToWebsocket() {
-      if (this.currentReconnectDelay < this.maxReconnectDelay) {
-        this.currentReconnectDelay *= 2;
-      }
-      this.connectToWebsocket();
     },
   },
 };

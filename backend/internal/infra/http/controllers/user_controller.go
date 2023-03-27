@@ -58,7 +58,7 @@ func (u UserController) ChangePassword(ctx echo.Context) error {
 		return err
 	}
 	user := userCtxValue.(domain.User)
-	uid := user.GetId()
+	uid := user.GetUid()
 
 	var usr requests.ChangePasswordRequest
 	err := ctx.Bind(&usr)
@@ -93,7 +93,7 @@ func (u UserController) ChangeName(ctx echo.Context) error {
 		return err
 	}
 	user := userCtxValue.(domain.User)
-	uid := user.GetId()
+	uid := user.GetUid()
 
 	var usr requests.UserRequest
 	err := ctx.Bind(&usr)
@@ -119,7 +119,7 @@ func (u UserController) ChangeName(ctx echo.Context) error {
 		return err
 	}
 
-	ctx.Response().Write([]byte(updatedUser.Password))
+	ctx.Response().Write([]byte(updatedUser.Name))
 
 	return nil
 }
