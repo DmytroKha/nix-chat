@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +20,7 @@ type UserService interface {
 	Update(uid string, usr requests.UserRequest) (database.User, error)
 	LoadAvatar(user database.User) (database.User, error)
 	GeneratePasswordHash(password string) (string, error)
+	GetUserBlackList(user database.User) ([]domain.User, error)
 }
 
 type userService struct {
@@ -179,6 +181,15 @@ func (s userService) LoadAvatar(user database.User) (database.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s userService) GetUserBlackList(user database.User) ([]domain.User, error) {
+	blackList, err := s.userRepo.GetUserBlackList(user)
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return []domain.User{}, err
+	}
+	return blackList, err
 }
 
 func (s userService) GeneratePasswordHash(password string) (string, error) {

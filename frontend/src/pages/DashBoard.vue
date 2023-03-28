@@ -22,7 +22,7 @@
                   <button class="btn btn-primary" @click="addFriend(user)">
                     Add to FL
                   </button>
-                  <button class="btn btn-primary" @click="addFoe(user)">
+                  <button class="btn btn-primary" @click="addToBlackList(user)">
                     Add to BL
                   </button>
                 </div>
@@ -44,9 +44,9 @@
                 <span class="input-group-text send_btn" @click="joinRoom(roomInput)"> > </span>
               </div>
               <div class="input-group-append">
-            <span class="input-group-text send_btn" @click="getAllRooms">
-              >
-            </span>
+<!--            <span class="input-group-text send_btn" @click="getAllRooms">-->
+<!--              >-->
+<!--            </span>-->
               </div>
             </div>
             <div class="row" v-if="users.length">
@@ -105,7 +105,7 @@
                 <div class="msg_cotainer">
                   {{ message.message }}
                   <span class="msg_name" v-if="message.sender">
-                    <img :src="message.sender.photo" width="30" height="30"/>
+                    <img :src="message.sender.photo" width="30"/>
                     {{ message.sender.name }}
                   </span>
                 </div>
@@ -172,6 +172,7 @@ export default {
       currentReconnectDelay: 0,
       maxReconnectDelay: 16000,
       loginError: "",
+      newRoom: true,
     };
   },
   //beforeMount() {
@@ -189,6 +190,7 @@ export default {
         //console.log("1 users", this.users)
         this.users = wsConnect.users;
         this.rooms = wsConnect.rooms;
+        this.chatRooms = wsConnect.chatRooms;
       }
   },
   methods: {
@@ -269,11 +271,14 @@ export default {
       let data = event.data;
       data = data.split(/\r?\n/);
       this.users = wsConnect.users;
+      this.rooms = wsConnect.rooms;
+      this.chatRooms = wsConnect.chatRooms;
       for (let i = 0; i < data.length; i++) {
         let msg = JSON.parse(data[i]);
         switch (msg.action) {
           case "send-message":
             this.handleChatMessage(msg);
+            wsConnect.chatRooms = this.chatRooms;
             break;
           case "user-join":
             // console.log("users user-join users", this.users);
@@ -311,6 +316,8 @@ export default {
       if (typeof room !== "undefined") {
         room.messages.push(msg);
       }
+      console.log("->send-message", msg)
+      console.log("->room", room)
     },
     handleUserJoined(msg) {
       if (!this.userExists(msg.sender)) {
@@ -334,7 +341,22 @@ export default {
       this.room.name = this.room.private ? msg.sender.name : this.room.name;
       this.room["messages"] = [];
       this.chatRooms.push(this.room);
-      //console.log("rooms", this.rooms);
+      // console.log("0. rooms", this.chatRooms);
+      // console.log("1. rooms", this.rooms);
+      // console.log("2. room", this.room.id);
+      // console.log("2.1. room", this.room.private);
+      this.newRoom = !this.room.private
+      for (let i = 0; i < this.rooms.length; i++) {
+        // console.log("4. room", this.rooms[i].id);
+        if (this.rooms[i].id === this.room.id) {
+          this.newRoom = false
+          // console.log("5. newRoom",  this.newRoom);
+        }
+      }
+      if (this.newRoom == true) {
+        this.rooms.push(this.room);
+        // console.log("6. rooms",  this.rooms);
+      }
     },
     handleAllRoomsJoined(msg) {
       this.room = msg.target;
@@ -351,6 +373,8 @@ export default {
     // },
     sendMessage(room) {
       if (room.newMessage !== "") {
+        console.log("<-send-message", room.newMessage)
+        console.log("<-room", room)
         wsConnect.ws.send(
           JSON.stringify({
             action: "send-message",
@@ -365,6 +389,7 @@ export default {
       }
     },
     findRoom(roomId) {
+      console.log("<->room", roomId)
       for (let i = 0; i < this.chatRooms.length; i++) {
         if (this.chatRooms[i].id === roomId) {
           return this.chatRooms[i];
@@ -412,8 +437,8 @@ export default {
         JSON.stringify({ action: "add-friend", message: friend.id })
       );
     },
-    addFoe(foe) {
-      wsConnect.ws.send(JSON.stringify({ action: "add-foe", message: foe.id }));
+    addToBlackList(bl) {
+      wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", message: bl.id }));
     },
     userExists(user) {
       for (let i = 0; i < this.users.length; i++) {

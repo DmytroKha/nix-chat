@@ -6,6 +6,7 @@ import (
 )
 
 const UserTableName = "users"
+const BlackListTableName = "black_list"
 
 type User struct {
 	Id       int64 `gorm:"primary_key;auto_increment;not_null"`
@@ -34,6 +35,7 @@ type UserRepository interface {
 	Find(uid string) (User, error)
 	FindByName(name string) (User, error)
 	FindAll() ([]domain.User, error)
+	GetUserBlackList(user User) ([]domain.User, error)
 }
 
 func NewUserRepository(dbSession *gorm.DB) UserRepository {
@@ -103,6 +105,20 @@ func (r *userRepository) FindByName(name string) (User, error) {
 func (r userRepository) FindAll() ([]domain.User, error) {
 	var usrs []User
 	err := r.sess.Table(UserTableName).Find(&usrs).Error
+	if err != nil {
+		return nil, err
+	}
+	var users []domain.User
+	for _, usr := range usrs {
+		users = append(users, &usr)
+	}
+
+	return users, nil
+}
+
+func (r userRepository) GetUserBlackList(user User) ([]domain.User, error) {
+	var usrs []User
+	err := r.sess.Table(BlackListTableName).Where("user_id = ?", user.Id).Find(&usrs).Error
 	if err != nil {
 		return nil, err
 	}

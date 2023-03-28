@@ -40,6 +40,22 @@ func (s imageService) Save(image database.Image, content []byte) (database.Image
 		return database.Image{}, err
 	}
 
+	allImages, err := s.repo.FindAll(image.UserId)
+	if err != nil {
+		log.Print(err)
+		return database.Image{}, err
+	}
+
+	for _, curImage := range allImages {
+		if curImage.Id != img.Id {
+			err = s.Delete(curImage.Id)
+			if err != nil {
+				log.Print(err)
+				return database.Image{}, err
+			}
+		}
+	}
+
 	return img, nil
 }
 

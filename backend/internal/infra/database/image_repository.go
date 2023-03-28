@@ -67,7 +67,7 @@ func (r imageRepository) FindAll(userId int64) ([]Image, error) {
 	var images []Image
 
 	//err := r.sess.Table(ImagesTableName).Where("user_id = ?", userId).Find(&images).Error
-	err := r.sess.Table(ImagesTableName).Where(&Image{UserId: userId, Deleted: 0}).Find(&images).Error
+	err := r.sess.Table(ImagesTableName).Where("user_id = ? AND deleted = 0", userId).Find(&images).Error
 	if err != nil {
 		return []Image{}, err
 	}

@@ -77,9 +77,10 @@ func (c AuthController) HandleLogin(ctx echo.Context) error {
 		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
 		return err
 	}
-	//friends, err := c.userService.GetFriends(user.Id)
+	photo := "../././file_storage/" + user.Image.Name
+	//blackList, err := c.userService.GetUserBlackList(user)
 	//ctx.Response().Write([]byte(token))
-	str := fmt.Sprintf("{\"token\": \"%v\",\"uid\": \"%v\"}", token, user.Uid)
+	str := fmt.Sprintf("{\"token\": \"%v\",\"uid\": \"%v\",\"photo\": \"%v\"}", token, user.Uid, photo)
 	ctx.Response().Write([]byte(str))
 
 	return nil

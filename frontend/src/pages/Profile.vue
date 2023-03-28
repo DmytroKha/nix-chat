@@ -10,7 +10,7 @@
 
           <div>
             <h2>Change avatar</h2>
-            <img :src="user.photo"/>
+            <img :src="user.photo" width="100"/>
             <input
               type="file"
               id="avatar"
@@ -99,7 +99,7 @@ export default {
     //this.user.photo = "./logo1.png"
     this.user.photo = wsConnect.user.photo
     //this.user.photo = "./.../6b3bcfca-a5cb-4b38-bd32-327a70d8853e.png"
-    console.log("photo", this.user.photo)
+    // console.log("photo", this.user.photo)
     // this.user.token = localStorage.getItem('token');
     // this.user.uid = localStorage.getItem('uid');
   },
@@ -181,12 +181,20 @@ export default {
       }
     },
     async changeAvatar(e) {
-      console.log(e.target.files[0].arrayBuffer())
+      var formData = new FormData();
+      // //Attach file
+      formData.append("image", e.target.files[0]);
+      console.log(formData)
       try {
         const result = await this.axios.put(
-          "http://localhost:8080/api/v1/users/change_avtr?bearer=" +
+            "http://localhost:8080/api/v1/users/change_avtr?bearer="+
             wsConnect.user.token,
-            e.target.files[0].arrayBuffer()
+            e.target.files[0]
+            // {
+            //   headers: {
+            //     "Content-Type": "multipart/form-data",
+            //   },
+            // }
         );
         if (
           result.data.status !== "undefined" &&
@@ -195,6 +203,7 @@ export default {
           this.profileError = "Change avatar failed";
         } else {
           wsConnect.user.photo = result.data
+          this.user.photo = result.data
           for (let i = 0; i < wsConnect.users.length; i++) {
             if (wsConnect.users[i].id == wsConnect.user.uid) {
               wsConnect.ws.send(
