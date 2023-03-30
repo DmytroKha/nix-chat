@@ -62,9 +62,12 @@ func main() {
 	userService := app.NewUserService(userRepository, imageService)
 	userController := controllers.NewUserController(userService)
 
+	blacklistRepository := database.NewBlacklistRepository(db)
+	blacklistService := app.NewBlacklistService(blacklistRepository)
+
 	roomRepository := database.NewRoomRepository(db)
 
-	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository)
+	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository, blacklistService)
 	go wsServer.Run(ctx)
 
 	authService := app.NewAuthService(userService, conf)

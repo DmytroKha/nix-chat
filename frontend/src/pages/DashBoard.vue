@@ -455,7 +455,7 @@ export default {
       );
     },
     addToBlackList(bl) {
-      wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", message: bl.id }));
+      wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", sender: bl }));
     },
     userExists(user) {
       for (let i = 0; i < this.users.length; i++) {

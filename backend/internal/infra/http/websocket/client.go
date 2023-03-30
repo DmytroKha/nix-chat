@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/DmytroKha/nix-chat/internal/domain"
+	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"log"
@@ -415,7 +416,15 @@ func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
 
 func (client *Client) joinToBlackList(sender domain.User) {
 
-	//rooms := client.wsServer.findAllRooms(ctx)
+	user, _ := client.wsServer.userRepository.Find(client.ID.String())
+	foe, _ := client.wsServer.userRepository.Find(sender.GetUid())
+	bl, _ := client.wsServer.blacklistService.Find(user.Id, foe.Id)
+	var emptyBl database.Blacklist
+	if bl == emptyBl {
+		bl.UserId = user.Id
+		bl.FoeId = foe.Id
+		bl, _ = client.wsServer.blacklistService.Save(bl)
+	}
 
 	// Don't allow to join private rooms through public room message
 	//if sender == nil && room.Private {
