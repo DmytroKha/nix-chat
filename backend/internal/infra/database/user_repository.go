@@ -8,9 +8,9 @@ import (
 const UserTableName = "users"
 
 type User struct {
-	Id       int64 `gorm:"primary_key;auto_increment;not_null"`
-	Uid      string
-	Name     string
+	Id       int64  `gorm:"primary_key;auto_increment;not_null"`
+	Uid      string `json:"id"`
+	Name     string `json:"name"`
 	Password string
 	Image    Image
 }
@@ -34,6 +34,7 @@ type UserRepository interface {
 	Find(uid string) (User, error)
 	FindByName(name string) (User, error)
 	FindAll() ([]domain.User, error)
+	GetUserBlackList(user domain.User) ([]domain.User, error)
 }
 
 func NewUserRepository(dbSession *gorm.DB) UserRepository {
@@ -109,6 +110,31 @@ func (r userRepository) FindAll() ([]domain.User, error) {
 	var users []domain.User
 	for _, usr := range usrs {
 		users = append(users, &usr)
+	}
+
+	return users, nil
+}
+
+func (r userRepository) GetUserBlackList(user domain.User) ([]domain.User, error) {
+	var usrs []User
+
+	u, err := r.Find(user.GetUid())
+	if err != nil {
+		return nil, err
+	}
+	err = r.sess.Raw("SELECT users.id, users.uid, users.name, "+
+		" black_list.user_id AS user_id, black_list.foe_id AS foe_id"+
+		" FROM users"+
+		" LEFT JOIN black_list ON black_list.foe_id = users.id"+
+		" WHERE black_list.user_id = ?", u.Id).Scan(&usrs).Error
+
+	if err != nil {
+		return nil, err
+	}
+	var users []domain.User
+	for _, usr := range usrs {
+		newUser := usr
+		users = append(users, &newUser)
 	}
 
 	return users, nil

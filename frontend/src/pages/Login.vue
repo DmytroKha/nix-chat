@@ -62,7 +62,7 @@ export default {
         newPassword: "",
         token: "",
         friends: [],
-        foes: [],
+        blackList: [],
       },
       users: [],
       initialReconnectDelay: 1000,
@@ -95,6 +95,9 @@ export default {
           wsConnect.user.token = result.data.token;
           wsConnect.user.uid = result.data.uid;
           wsConnect.user.name = this.user.username;
+          wsConnect.user.photo = result.data.photo
+          // wsConnect.user.blackList = result.data.blackList;
+          // console.log("blackList", wsConnect.user.blackList)
           //localStorage.setItem('name', this.user.username);
           //localStorage.setItem('token', this.user.token);
           //localStorage.setItem('uid', result.data.uid);

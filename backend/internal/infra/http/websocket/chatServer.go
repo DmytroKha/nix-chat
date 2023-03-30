@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/DmytroKha/nix-chat/config"
+	"github.com/DmytroKha/nix-chat/internal/app"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/google/uuid"
@@ -19,20 +20,22 @@ type WsServer struct {
 	broadcast  chan []byte
 	rooms      map[*Room]bool
 	//users          []database.User
-	users          []domain.User
-	roomRepository domain.RoomRepository
-	userRepository database.UserRepository
+	users            []domain.User
+	roomRepository   domain.RoomRepository
+	userRepository   database.UserRepository
+	blacklistService app.BlacklistService
 }
 
 // NewWebsocketServer creates a new WsServer type
-func NewWebsocketServer(roomRepository domain.RoomRepository, userRepository database.UserRepository) *WsServer {
+func NewWebsocketServer(roomRepository domain.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService) *WsServer {
 	wsServer := &WsServer{
-		clients:        make(map[*Client]bool),
-		register:       make(chan *Client),
-		unregister:     make(chan *Client),
-		rooms:          make(map[*Room]bool),
-		roomRepository: roomRepository,
-		userRepository: userRepository,
+		clients:          make(map[*Client]bool),
+		register:         make(chan *Client),
+		unregister:       make(chan *Client),
+		rooms:            make(map[*Room]bool),
+		roomRepository:   roomRepository,
+		userRepository:   userRepository,
+		blacklistService: blacklistService,
 	}
 
 	// Add users from database to server
