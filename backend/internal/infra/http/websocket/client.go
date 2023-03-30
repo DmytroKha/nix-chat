@@ -224,6 +224,12 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 	case UserLeftAction:
 		client.handleUserLeaveMessage(message)
 
+	case AddToBlackListAction:
+		client.handleJoinToBlackListMessage(message)
+
+	case GetBlackList:
+		client.handleBlackList(message)
+
 	}
 
 }
@@ -240,6 +246,26 @@ func (client *Client) handleJoinAllRoomsMessage(message Message, ctx context.Con
 	sender := message.Sender
 
 	client.joinToAllRooms(sender, ctx)
+}
+
+func (client *Client) handleJoinToBlackListMessage(message Message) {
+	sender := message.Sender
+
+	client.joinToBlackList(sender)
+}
+
+func (client *Client) handleBlackList(message Message) {
+	sender := message.Sender
+	users, _ := client.wsServer.userRepository.GetUserBlackList(sender)
+
+	msg := Message{
+		Action: GetBlackList,
+		//Target: room,
+		Sender: sender,
+		Users:  users,
+	}
+
+	client.send <- msg.encode()
 }
 
 //func (client *Client) handleJoinOnlineUsersMessage(ctx context.Context) {
@@ -387,6 +413,27 @@ func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
 
 }
 
+func (client *Client) joinToBlackList(sender domain.User) {
+
+	//rooms := client.wsServer.findAllRooms(ctx)
+
+	// Don't allow to join private rooms through public room message
+	//if sender == nil && room.Private {
+	//	return nil
+	//}
+	//for _, room := range rooms {
+	//	//client.rooms[room] = true
+	//	//room.register <- client
+	//	var r Room
+	//	r.ID, _ = uuid.Parse(room.GetUid())
+	//	r.Name = room.GetName()
+	//	r.Private = room.GetPrivate()
+
+	client.notifyBlackList(sender)
+	//}
+
+}
+
 // New method
 // Check if the client is not yet in the room
 func (client *Client) isInRoom(room *Room) bool {
@@ -415,6 +462,19 @@ func (client *Client) notifyGetAllRooms(room *Room, sender domain.User) {
 		Target: room,
 		Sender: sender,
 		//SenderId: senderId,
+	}
+
+	client.send <- message.encode()
+}
+
+func (client *Client) notifyBlackList(sender domain.User) {
+	//var users []domain.User
+	//users = append(users, user)
+	message := Message{
+		Action: AddToBlackListAction,
+		//Target: room,
+		Sender: sender,
+		//Users:  users,
 	}
 
 	client.send <- message.encode()

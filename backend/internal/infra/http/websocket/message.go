@@ -14,9 +14,10 @@ const UserLeftAction = "user-left"
 const JoinRoomPrivateAction = "join-room-private"
 const RoomJoinedAction = "room-joined"
 const AddFriendAction = "add-friend"
-const AddFoeAction = "add-foe"
+const AddToBlackListAction = "add-to-black-list"
 const GetAllRooms = "all-rooms"
 const ChangeNameAction = "change-username"
+const GetBlackList = "get-black-list"
 
 //const GetOnlineUsers = "on-line-users"
 

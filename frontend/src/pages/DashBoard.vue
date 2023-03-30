@@ -67,7 +67,19 @@
         </div>
         <div>
           <h2 v-on:click="showUsersList = 4">black list</h2>
-          <div v-if="showUsersList == 4">users from black list</div>
+          <div v-if="showUsersList == 4">users from black list
+            <div class="row" v-if="blackList.length">
+              <div class="col-2 card profile"  v-for="user in blackList" :key="user.id">
+                <div class="card-header">{{ user.name }}</div>
+                <div class="card-body">
+                  <button class="btn btn-primary" @click="addToBlackList(user)">
+                    Remove from blacklist
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       <div class="main">
@@ -158,15 +170,12 @@ export default {
       // user: {
       //   uid: "",
       //   name: "",
-      //   username: "",
-      //   password: "",
-      //   confirmPassword: "",
-      //   oldPassword: "",
-      //   newPassword: "",
       //   token: "",
       //   friends: [],
-      //   foes: [],
+      //   blackList: [],
       // },
+      friends: [],
+      blackList: [],
       users: [],
       initialReconnectDelay: 1000,
       currentReconnectDelay: 0,
@@ -191,6 +200,8 @@ export default {
         this.users = wsConnect.users;
         this.rooms = wsConnect.rooms;
         this.chatRooms = wsConnect.chatRooms;
+        this.blackList = wsConnect.user.blackList;
+        this.friends = wsConnect.user.friends;
       }
   },
   methods: {
@@ -227,26 +238,9 @@ export default {
       //this.getAllRooms();
     },
     connectToWebsocket() {
-      // if (this.user.token != "") {
-      //   this.ws = new WebSocket(this.serverUrl + "?bearer=" + this.user.token);
-      //   localStorage.setItem('ws', true);
-      // }
-      //else {
-      //  this.ws = new WebSocket(this.serverUrl + "?name=" + this.user.name);
-      //}
-      // this.ws.addEventListener("open", (event) => {
-      //   this.onWebsocketOpen(event);
-      // });
-      // this.ws.addEventListener("message", (event) => {
-      //   this.handleNewMessage(event);
-      // });
       wsConnect.ws.addEventListener("message", (event) => {
-        //console.log("event connectToWebsocket", event);
         this.handleNewMessage(event);
       });
-      // this.ws.addEventListener("close", (event) => {
-      //   this.onWebsocketClose(event);
-      // });
     },
     onWebsocketOpen() {
       console.log("connected to WS!");
@@ -281,16 +275,10 @@ export default {
             wsConnect.chatRooms = this.chatRooms;
             break;
           case "user-join":
-            // console.log("users user-join users", this.users);
-            // console.log("users user-join ws", wsConnect.users);
-            // console.log("users user-join msg", msg);
             this.handleUserJoined(msg);
             wsConnect.users = this.users;
             break;
           case "user-left":
-            // console.log("users log-out users", this.users);
-            // console.log("users log-out ws", wsConnect.users);
-            // console.log("users log-out msg", msg);
             this.handleUserLeft(msg);
             wsConnect.users = this.users;
             break;
@@ -302,10 +290,14 @@ export default {
             this.handleAllRoomsJoined(msg);
             wsConnect.rooms = this.rooms;
             break;
-          // case "on-line-users":
-          //   //console.log('!!! on-line-users', msg)
-          //   this.handleOnlineUsers(msg);
-          //   break;
+          case "add-to-black-list":
+            this.blackList = wsConnect.user.blackList;
+            this.handleBlackListJoined(msg);
+            wsConnect.user.blackList = this.blackList;
+            break;
+          case "get-black-list":
+            this.handleBlackList(msg);
+            break;
           default:
             break;
         }
@@ -371,6 +363,31 @@ export default {
     //      this.users.push(msg.users[i])
     //   }
     // },
+    handleBlackListJoined(msg) {
+      const usr = wsConnect.user;
+      if (typeof usr !== "undefined") {
+      var inList = false
+      for (let i = 0; i < this.blackList.length; i++) {
+        if (this.blackList[i].id == msg.sender.id) {
+          inList = true;
+          break;
+        }
+      }
+      if (!inList) {
+          usr.blackList.push(msg.sender);
+      }
+      }
+    },
+    handleBlackList(msg) {
+      console.log("1. bl", msg);
+      console.log("2. bl", msg.users);
+      var blackList = msg.users;
+      if (typeof blackList !== "undefined") {
+        for (let i = 0; i < blackList.length; i++) {
+          this.blackList.push(msg.users[i]);
+        }
+      }
+    },
     sendMessage(room) {
       if (room.newMessage !== "") {
         console.log("<-send-message", room.newMessage)

@@ -20,7 +20,7 @@ type UserService interface {
 	Update(uid string, usr requests.UserRequest) (database.User, error)
 	LoadAvatar(user database.User) (database.User, error)
 	GeneratePasswordHash(password string) (string, error)
-	GetUserBlackList(user database.User) ([]domain.User, error)
+	GetUserBlackList(user domain.User) ([]domain.User, error)
 }
 
 type userService struct {
@@ -183,7 +183,7 @@ func (s userService) LoadAvatar(user database.User) (database.User, error) {
 	return user, nil
 }
 
-func (s userService) GetUserBlackList(user database.User) ([]domain.User, error) {
+func (s userService) GetUserBlackList(user domain.User) ([]domain.User, error) {
 	blackList, err := s.userRepo.GetUserBlackList(user)
 	if err != nil {
 		log.Printf("UserService: %s", err)
