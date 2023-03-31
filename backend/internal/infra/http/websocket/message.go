@@ -18,6 +18,7 @@ const AddToBlackListAction = "add-to-black-list"
 const GetAllRooms = "all-rooms"
 const ChangeNameAction = "change-username"
 const GetBlackList = "get-black-list"
+const RemoveFromBlackListAction = "remove-from-black-list"
 
 //const GetOnlineUsers = "on-line-users"
 

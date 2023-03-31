@@ -7,7 +7,6 @@ import (
 	"github.com/DmytroKha/nix-chat/internal/infra/http/requests"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/resources"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
@@ -44,7 +43,7 @@ func (s authService) Register(usr requests.UserRegistrationRequest) (database.Us
 		log.Printf("invalid credentials")
 		return database.User{}, "", errors.New("invalid credentials")
 	}
-	u.Uid = uuid.New().String()
+	//u.Uid = uuid.New().String()
 
 	user, err := s.userService.Save(u)
 	if err != nil {
@@ -81,8 +80,8 @@ func (s authService) Login(usr requests.UserLoginRequest) (database.User, string
 
 func (s authService) GenerateJwt(user database.User) (string, error) {
 	claims := resources.JwtClaims{
-		ID:    user.Id,
-		Uid:   user.Uid,
+		ID: user.Id,
+		//Uid:   user.Uid,
 		Name:  user.Name,
 		Photo: user.Image.Name,
 		StandardClaims: jwt.StandardClaims{

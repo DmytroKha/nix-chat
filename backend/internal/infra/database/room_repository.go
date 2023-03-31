@@ -24,6 +24,10 @@ func NewRoomRepository(dbSession *gorm.DB) domain.RoomRepository {
 	}
 }
 
+func (room *Room) GetId() int64 {
+	return room.Id
+}
+
 func (room *Room) GetUid() string {
 	return room.Uid
 }
@@ -38,7 +42,8 @@ func (room *Room) GetPrivate() bool {
 
 func (rr roomRepository) Save(r domain.Room) (domain.Room, error) {
 	var room Room
-	room.Uid = r.GetUid()
+	//room.Uid = r.GetUid()
+	room.Id = r.GetId()
 	room.Name = r.GetName()
 	room.Private = r.GetPrivate()
 	err := rr.sess.Table(RoomTableName).Create(&room).Error

@@ -10,6 +10,7 @@ type Blacklist struct {
 	Id     int64 `gorm:"primary_key;auto_increment;not_null"`
 	UserId int64 `json:"userId"`
 	FoeId  int64 `json:"foeId"`
+	RoomId int64 `json:"roomId"`
 }
 
 type blacklistRepository struct {
@@ -19,7 +20,7 @@ type blacklistRepository struct {
 type BlackListRepository interface {
 	Save(bl Blacklist) (Blacklist, error)
 	Delete(id int64) error
-	Find(userId, foeId int64) (Blacklist, error)
+	Find(userId, roomId int64) (Blacklist, error)
 	FindAll(userId int64) ([]Blacklist, error)
 	//GetUserBlackList(user domain.User) ([]domain.User, error)
 }
@@ -46,9 +47,9 @@ func (r blacklistRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *blacklistRepository) Find(userId, foeId int64) (Blacklist, error) {
+func (r *blacklistRepository) Find(userId, roomId int64) (Blacklist, error) {
 	var bl Blacklist
-	err := r.sess.Table(BlacklistTableName).First(&bl, "user_id = ? AND foe_id = ?", userId, foeId).Error
+	err := r.sess.Table(BlacklistTableName).First(&bl, "user_id = ? AND room_id = ?", userId, roomId).Error
 	if err != nil {
 		return Blacklist{}, err
 	}

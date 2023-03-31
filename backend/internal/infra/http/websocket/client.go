@@ -7,10 +7,10 @@ import (
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -49,13 +49,13 @@ type Client struct {
 	conn     *websocket.Conn
 	wsServer *WsServer
 	send     chan []byte
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Photo    string    `json:"photo"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Photo    string `json:"photo"`
 	rooms    map[*Room]bool
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID string, photo string) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID int64, photo string) *Client {
 	client := &Client{
 		Name:     name,
 		conn:     conn,
@@ -64,8 +64,8 @@ func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID string,
 		rooms:    make(map[*Room]bool),
 	}
 
-	if ID != "" {
-		client.ID, _ = uuid.Parse(ID)
+	if ID != 0 {
+		client.ID = ID
 	}
 
 	if photo != "" {
@@ -172,7 +172,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 		return err
 	}
 
-	client := newClient(conn, wsServer, user.GetName(), user.GetUid(), user.GetPhoto())
+	client := newClient(conn, wsServer, user.GetName(), user.GetId(), user.GetPhoto())
 
 	go client.writePump()
 	go client.readPump()
@@ -200,7 +200,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 
 	switch message.Action {
 	case SendMessageAction:
-		roomID := message.Target.GetUid()
+		roomID := message.Target.GetId()
 		if room := client.wsServer.findRoomByID(roomID); room != nil {
 			room.broadcast <- &message
 		}
@@ -226,11 +226,13 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 		client.handleUserLeaveMessage(message)
 
 	case AddToBlackListAction:
-		client.handleJoinToBlackListMessage(message)
+		client.handleJoinToBlackListMessage(message, ctx)
 
 	case GetBlackList:
 		client.handleBlackList(message)
 
+	case RemoveFromBlackListAction:
+		client.handleRemoveFromBlackListMessage(message, ctx)
 	}
 
 }
@@ -249,10 +251,16 @@ func (client *Client) handleJoinAllRoomsMessage(message Message, ctx context.Con
 	client.joinToAllRooms(sender, ctx)
 }
 
-func (client *Client) handleJoinToBlackListMessage(message Message) {
+func (client *Client) handleJoinToBlackListMessage(message Message, ctx context.Context) {
 	sender := message.Sender
 
-	client.joinToBlackList(sender)
+	client.joinToBlackList(sender, ctx)
+}
+
+func (client *Client) handleRemoveFromBlackListMessage(message Message, ctx context.Context) {
+	sender := message.Sender
+
+	client.removeFromBlackList(sender, ctx)
 }
 
 func (client *Client) handleBlackList(message Message) {
@@ -284,7 +292,9 @@ func (client *Client) handleBlackList(message Message) {
 // Refactored method
 // Added nil check
 func (client *Client) handleLeaveRoomMessage(message Message) {
-	room := client.wsServer.findRoomByID(message.Message)
+	roomId, _ := strconv.Atoi(message.Message)
+	//room := client.wsServer.findRoomByID(message.Message)
+	room := client.wsServer.findRoomByID(int64(roomId))
 	if room == nil {
 		return
 	}
@@ -304,7 +314,7 @@ func (client *Client) handleUserLeaveMessage(message Message) {
 	//client.send <- message.encode()
 	//client.wsServer.handleUserLeft(message)
 	for i, user := range client.wsServer.users {
-		if user.GetUid() == message.Sender.GetUid() {
+		if user.GetId() == message.Sender.GetId() {
 			//if user.Id == message.SenderId {
 			client.wsServer.users[i] = client.wsServer.users[len(client.wsServer.users)-1]
 			client.wsServer.users = client.wsServer.users[:len(client.wsServer.users)-1]
@@ -323,10 +333,10 @@ func (client *Client) handleUserJoinMessage(message Message) {
 	//client.send <- message.encode()
 	//client.wsServer.handleUserJoined(message)
 
-	if client.ID.String() == message.Sender.GetUid() && client.Name != message.Sender.GetName() {
+	if client.ID == message.Sender.GetId() && client.Name != message.Sender.GetName() {
 		client.Name = message.Sender.GetName()
 	}
-	if client.ID.String() == message.Sender.GetUid() && client.Photo != message.Sender.GetPhoto() {
+	if client.ID == message.Sender.GetId() && client.Photo != message.Sender.GetPhoto() {
 		client.Photo = message.Sender.GetPhoto()
 	}
 	client.wsServer.register <- client
@@ -337,9 +347,9 @@ func (client *Client) handleUserJoinMessage(message Message) {
 // Then we will bothe join the client and the target.
 func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.Context) {
 
-	//userId, _ := strconv.Atoi(message.Message)
-	//target := client.wsServer.findUserByID(int64(userId))
-	target := client.wsServer.findUserByID(message.Message)
+	userId, _ := strconv.Atoi(message.Message)
+	target := client.wsServer.findUserByID(int64(userId))
+	//target := client.wsServer.findUserByID(message.Message)
 
 	if target == nil {
 		return
@@ -348,10 +358,21 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.
 	// create unique room name combined to the two IDs
 	//roomName := message.Message + client.ID.String()
 	roomName := ""
-	if message.Message < client.ID.String() {
-		roomName = message.Message + client.ID.String()
+	strID := strconv.Itoa(int(client.ID))
+	if int64(userId) < client.ID {
+		roomName = message.Message + strID
 	} else {
-		roomName = client.ID.String() + message.Message
+		roomName = strID + message.Message
+	}
+
+	room, _ := client.wsServer.roomRepository.FindByName(roomName)
+	if room != nil {
+		bl, _ := client.wsServer.blacklistService.Find(int64(userId), room.GetId())
+
+		var emptyBl database.Blacklist
+		if bl != emptyBl {
+			return
+		}
 	}
 
 	// Join room
@@ -405,7 +426,7 @@ func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
 		//client.rooms[room] = true
 		//room.register <- client
 		var r Room
-		r.ID, _ = uuid.Parse(room.GetUid())
+		r.ID = room.GetId()
 		r.Name = room.GetName()
 		r.Private = room.GetPrivate()
 
@@ -414,32 +435,52 @@ func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
 
 }
 
-func (client *Client) joinToBlackList(sender domain.User) {
+func (client *Client) joinToBlackList(sender domain.User, ctx context.Context) {
 
-	user, _ := client.wsServer.userRepository.Find(client.ID.String())
-	foe, _ := client.wsServer.userRepository.Find(sender.GetUid())
-	bl, _ := client.wsServer.blacklistService.Find(user.Id, foe.Id)
+	senderId := sender.GetId()
+	userId := client.ID
+	strUserId := strconv.Itoa(int(userId))
+	strSenderId := strconv.Itoa(int(senderId))
+	roomName := ""
+
+	if userId < senderId {
+		roomName = strUserId + strSenderId
+	} else {
+		roomName = strSenderId + strUserId
+	}
+	room := client.wsServer.findRoomByName(roomName, ctx)
+	bl, _ := client.wsServer.blacklistService.Find(userId, room.GetId())
 	var emptyBl database.Blacklist
 	if bl == emptyBl {
-		bl.UserId = user.Id
-		bl.FoeId = foe.Id
+		bl.UserId = userId
+		bl.FoeId = senderId
+		bl.RoomId = room.GetId()
 		bl, _ = client.wsServer.blacklistService.Save(bl)
 	}
 
-	// Don't allow to join private rooms through public room message
-	//if sender == nil && room.Private {
-	//	return nil
-	//}
-	//for _, room := range rooms {
-	//	//client.rooms[room] = true
-	//	//room.register <- client
-	//	var r Room
-	//	r.ID, _ = uuid.Parse(room.GetUid())
-	//	r.Name = room.GetName()
-	//	r.Private = room.GetPrivate()
-
 	client.notifyBlackList(sender)
-	//}
+
+}
+
+func (client *Client) removeFromBlackList(sender domain.User, ctx context.Context) {
+
+	senderId := sender.GetId()
+	userId := client.ID
+	strUserId := strconv.Itoa(int(userId))
+	strSenderId := strconv.Itoa(int(senderId))
+	roomName := ""
+
+	if userId < senderId {
+		roomName = strUserId + strSenderId
+	} else {
+		roomName = strSenderId + strUserId
+	}
+	room := client.wsServer.findRoomByName(roomName, ctx)
+	bl, _ := client.wsServer.blacklistService.Find(userId, room.GetId())
+	var emptyBl database.Blacklist
+	if bl != emptyBl {
+		_ = client.wsServer.blacklistService.Delete(bl.Id)
+	}
 
 }
 
@@ -490,7 +531,7 @@ func (client *Client) notifyBlackList(sender domain.User) {
 }
 
 func (client *Client) GetUid() string {
-	return client.ID.String()
+	return "" //client.ID.String()
 }
 
 func (client *Client) GetName() string {
@@ -502,14 +543,14 @@ func (client *Client) GetPhoto() string {
 }
 
 func (client *Client) GetId() int64 {
-	return 0
+	return client.ID
 }
 
 // Send out invite message over pub/sub in the general channel.
 func (client *Client) inviteTargetUser(target domain.User, room *Room, ctx context.Context) {
 	inviteMessage := &Message{
 		Action:  JoinRoomPrivateAction,
-		Message: target.GetUid(),
+		Message: strconv.Itoa(int(target.GetId())),
 		Target:  room,
 		Sender:  client,
 		//SenderId: client.ID,

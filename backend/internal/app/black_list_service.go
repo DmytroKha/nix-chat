@@ -8,7 +8,7 @@ import (
 type BlacklistService interface {
 	Save(bl database.Blacklist) (database.Blacklist, error)
 	Delete(id int64) error
-	Find(userId, foeId int64) (database.Blacklist, error)
+	Find(userId, roomId int64) (database.Blacklist, error)
 	FindAll(userId int64) ([]database.Blacklist, error)
 }
 
@@ -40,8 +40,8 @@ func (s blacklistService) Delete(id int64) error {
 	return nil
 }
 
-func (s blacklistService) Find(userId, foeId int64) (database.Blacklist, error) {
-	blacklist, err := s.blRepo.Find(userId, foeId)
+func (s blacklistService) Find(userId, roomId int64) (database.Blacklist, error) {
+	blacklist, err := s.blRepo.Find(userId, roomId)
 	if err != nil {
 		log.Print(err)
 		return database.Blacklist{}, err
