@@ -72,7 +72,7 @@
               <div class="col-2 card profile"  v-for="user in blackList" :key="user.id">
                 <div class="card-header">{{ user.name }}</div>
                 <div class="card-body">
-                  <button class="btn btn-primary" @click="addToBlackList(user)">
+                  <button class="btn btn-primary" @click="removeFromBlackList(user)">
                     Remove from blacklist
                   </button>
                 </div>
@@ -312,6 +312,8 @@ export default {
       console.log("->room", room)
     },
     handleUserJoined(msg) {
+      console.log('++++',msg.sender)
+      console.log('++++',this.users)
       if (!this.userExists(msg.sender)) {
         this.users.push(msg.sender);
         // console.log('++++',this.users)
@@ -333,21 +335,21 @@ export default {
       this.room.name = this.room.private ? msg.sender.name : this.room.name;
       this.room["messages"] = [];
       this.chatRooms.push(this.room);
-      // console.log("0. rooms", this.chatRooms);
-      // console.log("1. rooms", this.rooms);
-      // console.log("2. room", this.room.id);
-      // console.log("2.1. room", this.room.private);
+      console.log("0. rooms", this.chatRooms);
+      console.log("1. rooms", this.rooms);
+      console.log("2. room", this.room.id);
+      console.log("2.1. room", this.room.private);
       this.newRoom = !this.room.private
       for (let i = 0; i < this.rooms.length; i++) {
-        // console.log("4. room", this.rooms[i].id);
+        console.log("4. room", this.rooms[i].id);
         if (this.rooms[i].id === this.room.id) {
           this.newRoom = false
-          // console.log("5. newRoom",  this.newRoom);
+          console.log("5. newRoom",  this.newRoom);
         }
       }
       if (this.newRoom == true) {
         this.rooms.push(this.room);
-        // console.log("6. rooms",  this.rooms);
+        console.log("6. rooms",  this.rooms);
       }
     },
     handleAllRoomsJoined(msg) {
@@ -435,7 +437,7 @@ export default {
     //   );
     //},
     leaveRoom(room) {
-      wsConnect.ws.send(JSON.stringify({ action: "leave-room", message: room.id }));
+      wsConnect.ws.send(JSON.stringify({ action: "leave-room", message: room.id.toString() }));
 
       for (let i = 0; i < this.chatRooms.length; i++) {
         if (this.chatRooms[i].id === room.id) {
@@ -445,17 +447,31 @@ export default {
       }
     },
     joinPrivateRoom(room) {
+      console.log("room.id", room.id)
+      console.log("0. room.id", this.chatRooms);
+      console.log("1. room.id", this.rooms);
       wsConnect.ws.send(
-        JSON.stringify({ action: "join-room-private", message: room.id })
+        JSON.stringify({ action: "join-room-private", message: room.id.toString() })
       );
     },
     addFriend(friend) {
       wsConnect.ws.send(
-        JSON.stringify({ action: "add-friend", message: friend.id })
+        JSON.stringify({ action: "add-friend", message: friend.id.toString() })
       );
     },
     addToBlackList(bl) {
       wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", sender: bl }));
+    },
+    removeFromBlackList(bl) {
+      console.log("removeFromBlackList", bl);
+      wsConnect.ws.send(JSON.stringify({ action: "remove-from-black-list", sender: bl }));
+
+      for (let i = 0; i < this.blackList.length; i++) {
+        if (this.blackList[i].id === bl.id) {
+          this.blackList.splice(i, 1);
+          break;
+        }
+      }
     },
     userExists(user) {
       for (let i = 0; i < this.users.length; i++) {

@@ -80,7 +80,7 @@ func (c AuthController) HandleLogin(ctx echo.Context) error {
 	photo := "../././file_storage/" + user.Image.Name
 	//blackList, err := c.userService.GetUserBlackList(user)
 	//ctx.Response().Write([]byte(token))
-	str := fmt.Sprintf("{\"token\": \"%v\",\"uid\": \"%v\",\"photo\": \"%v\"}", token, user.Uid, photo)
+	str := fmt.Sprintf("{\"token\": \"%v\",\"uid\": \"%v\",\"photo\": \"%v\"}", token, user.Id, photo)
 	ctx.Response().Write([]byte(str))
 
 	return nil

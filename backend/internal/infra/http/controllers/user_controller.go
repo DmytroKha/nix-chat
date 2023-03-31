@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type UserController struct {
@@ -35,9 +36,9 @@ func NewUserController(us app.UserService) UserController {
 // @Failure      404  {string}  echo.HTTPError
 // @Router       /users/{id} [get]
 func (u UserController) Find(ctx echo.Context) error {
-	uid := ctx.Param("uid")
+	id, _ := strconv.Atoi(ctx.Param("id"))
 
-	user, err := u.userService.Find(uid)
+	user, err := u.userService.Find(int64(id))
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusNotFound, err)
 	}
@@ -58,7 +59,7 @@ func (u UserController) ChangePassword(ctx echo.Context) error {
 		return err
 	}
 	user := userCtxValue.(domain.User)
-	uid := user.GetUid()
+	id := user.GetId()
 
 	var usr requests.ChangePasswordRequest
 	err := ctx.Bind(&usr)
@@ -73,7 +74,7 @@ func (u UserController) ChangePassword(ctx echo.Context) error {
 		return err
 	}
 
-	updatedUser, err := u.userService.ChangePassword(uid, usr)
+	updatedUser, err := u.userService.ChangePassword(id, usr)
 	if err != nil {
 		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
 		return err
@@ -93,7 +94,7 @@ func (u UserController) ChangeName(ctx echo.Context) error {
 		return err
 	}
 	user := userCtxValue.(domain.User)
-	uid := user.GetUid()
+	id := user.GetId()
 
 	var usr requests.UserRequest
 	err := ctx.Bind(&usr)
@@ -113,7 +114,7 @@ func (u UserController) ChangeName(ctx echo.Context) error {
 		return err
 	}
 
-	updatedUser, err := u.userService.ChangeName(uid, usr.Name)
+	updatedUser, err := u.userService.ChangeName(id, usr.Name)
 	if err != nil {
 		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
 		return err
@@ -140,7 +141,7 @@ func (u UserController) ChangeName(ctx echo.Context) error {
 // @Failure      500  {string}  echo.HTTPError
 // @Router       /users/{id} [put]
 func (u UserController) Update(ctx echo.Context) error {
-	uid := ctx.Param("uid")
+	id, _ := strconv.Atoi(ctx.Param("id"))
 
 	var usr requests.UserRequest
 	err := ctx.Bind(&usr)
@@ -151,7 +152,7 @@ func (u UserController) Update(ctx echo.Context) error {
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusUnprocessableEntity, err)
 	}
-	updatedUser, err := u.userService.Update(uid, usr)
+	updatedUser, err := u.userService.Update(int64(id), usr)
 	if err != nil {
 		return FormatedResponse(ctx, http.StatusInternalServerError, err)
 	}

@@ -8,8 +8,8 @@ import (
 const UserTableName = "users"
 
 type User struct {
-	Id       int64  `gorm:"primary_key;auto_increment;not_null"`
-	Uid      string `json:"id"`
+	Id int64 `gorm:"primary_key;auto_increment;not_null" json:"id"`
+	//Uid      string `json:"id"`
 	Name     string `json:"name"`
 	Password string
 	Image    Image
@@ -30,8 +30,8 @@ type userRepository struct {
 type UserRepository interface {
 	Save(user User) (User, error)
 	Update(user User) (User, error)
-	Delete(uid string) error
-	Find(uid string) (User, error)
+	Delete(id int64) error
+	Find(id int64) (User, error)
 	FindByName(name string) (User, error)
 	FindAll() ([]domain.User, error)
 	GetUserBlackList(user domain.User) ([]domain.User, error)
@@ -48,7 +48,7 @@ func (user *User) GetId() int64 {
 }
 
 func (user *User) GetUid() string {
-	return user.Uid
+	return "" //user.Uid
 }
 
 func (user *User) GetName() string {
@@ -75,17 +75,17 @@ func (r userRepository) Update(u User) (User, error) {
 	return u, nil
 }
 
-func (r userRepository) Delete(uid string) error {
-	err := r.sess.Table(UserTableName).Where("uid = ?", uid).Delete(User{}).Error
+func (r userRepository) Delete(id int64) error {
+	err := r.sess.Table(UserTableName).Where("id = ?", id).Delete(User{}).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *userRepository) Find(uid string) (User, error) {
+func (r *userRepository) Find(id int64) (User, error) {
 	var u User
-	err := r.sess.Table(UserTableName).First(&u, "uid = ?", uid).Error
+	err := r.sess.Table(UserTableName).First(&u, "id = ?", id).Error
 	if err != nil {
 		return User{}, err
 	}
@@ -118,7 +118,7 @@ func (r userRepository) FindAll() ([]domain.User, error) {
 func (r userRepository) GetUserBlackList(user domain.User) ([]domain.User, error) {
 	var usrs []User
 
-	u, err := r.Find(user.GetUid())
+	u, err := r.Find(user.GetId())
 	if err != nil {
 		return nil, err
 	}
