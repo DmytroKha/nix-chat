@@ -168,7 +168,7 @@ export default {
       rooms: [],
       chatRooms: [],
       // user: {
-      //   uid: "",
+      //   id: "",
       //   name: "",
       //   token: "",
       //   friends: [],
@@ -211,11 +211,11 @@ export default {
     logout() {
       // localStorage.removeItem("name");
       // localStorage.removeItem("token");
-      // localStorage.removeItem("uid");
+      // localStorage.removeItem("id");
       // localStorage.removeItem("ws");
       // console.log(this.user.name);
       for (let i = 0; i < wsConnect.users.length; i++) {
-        if (this.users[i].id == wsConnect.user.uid) {
+        if (this.users[i].id == wsConnect.user.id) {
           //console.log("user-left", wsConnect.users[i]);
           wsConnect.ws.send(
             JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })

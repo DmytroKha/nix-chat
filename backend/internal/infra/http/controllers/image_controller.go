@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/DmytroKha/nix-chat/internal/app"
-	"github.com/google/uuid"
 )
 
 type ImageController struct {

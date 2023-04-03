@@ -24,7 +24,6 @@ type AuthDto struct {
 
 type JwtClaims struct {
 	ID    int64  `json:"id"`
-	Uid   string `json:"uid"`
 	Name  string `json:"name"`
 	Photo string `json:"photo"`
 	jwt.StandardClaims
@@ -32,10 +31,6 @@ type JwtClaims struct {
 
 type GoogleUrlDto struct {
 	Url string `json:"url"`
-}
-
-func (c *JwtClaims) GetUid() string {
-	return c.Uid
 }
 
 func (c *JwtClaims) GetName() string {

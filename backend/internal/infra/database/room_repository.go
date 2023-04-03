@@ -9,7 +9,6 @@ const RoomTableName = "rooms"
 
 type Room struct {
 	Id      int64 `gorm:"primary_key;auto_increment;not_null"`
-	Uid     string
 	Name    string
 	Private bool
 }
@@ -26,10 +25,6 @@ func NewRoomRepository(dbSession *gorm.DB) domain.RoomRepository {
 
 func (room *Room) GetId() int64 {
 	return room.Id
-}
-
-func (room *Room) GetUid() string {
-	return room.Uid
 }
 
 func (room *Room) GetName() string {
