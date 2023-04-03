@@ -101,14 +101,14 @@ export default {
     //this.user.photo = "./.../6b3bcfca-a5cb-4b38-bd32-327a70d8853e.png"
     // console.log("photo", this.user.photo)
     // this.user.token = localStorage.getItem('token');
-    // this.user.uid = localStorage.getItem('uid');
+    // this.user.id = localStorage.getItem('id');
   },
   methods: {
     navigate() {
       router.push({ path: "/dashboard" });
       //localStorage.removeItem('name');
       //localStorage.removeItem('token');
-      //localStorage.removeItem('uid');
+      //localStorage.removeItem('id');
     },
     // async getUserData() {
     //   try {
@@ -162,7 +162,7 @@ export default {
         } else {
           wsConnect.user.name = result.data;
           for (let i = 0; i < wsConnect.users.length; i++) {
-            if (wsConnect.users[i].id == wsConnect.user.uid) {
+            if (wsConnect.users[i].id == wsConnect.user.id) {
               wsConnect.ws.send(
                   JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })
               );
@@ -205,7 +205,7 @@ export default {
           wsConnect.user.photo = result.data
           this.user.photo = result.data
           for (let i = 0; i < wsConnect.users.length; i++) {
-            if (wsConnect.users[i].id == wsConnect.user.uid) {
+            if (wsConnect.users[i].id == wsConnect.user.id) {
               wsConnect.ws.send(
                   JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })
               );

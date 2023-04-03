@@ -85,10 +85,6 @@ func (room *Room) GetId() int64 {
 	return room.ID
 }
 
-func (room *Room) GetUid() string {
-	return "" //room.ID.String()
-}
-
 func (room *Room) GetName() string {
 	return room.Name
 }

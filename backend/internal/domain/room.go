@@ -2,7 +2,7 @@ package domain
 
 type Room interface {
 	GetId() int64
-	GetUid() string
+	//GetUid() string
 	GetName() string
 	GetPrivate() bool
 }

@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS nix_chat.message_list CASCADE;

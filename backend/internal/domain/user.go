@@ -2,7 +2,7 @@ package domain
 
 type User interface {
 	//
-	GetUid() string
+	//GetUid() string
 	GetName() string
 	GetPhoto() string
 	GetId() int64

@@ -47,10 +47,6 @@ func (user *User) GetId() int64 {
 	return user.Id
 }
 
-func (user *User) GetUid() string {
-	return "" //user.Uid
-}
-
 func (user *User) GetName() string {
 	return user.Name
 }
@@ -122,7 +118,7 @@ func (r userRepository) GetUserBlackList(user domain.User) ([]domain.User, error
 	if err != nil {
 		return nil, err
 	}
-	err = r.sess.Raw("SELECT users.id, users.uid, users.name, "+
+	err = r.sess.Raw("SELECT users.id, users.name, "+
 		" black_list.user_id AS user_id, black_list.foe_id AS foe_id"+
 		" FROM users"+
 		" LEFT JOIN black_list ON black_list.foe_id = users.id"+

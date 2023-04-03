@@ -530,10 +530,6 @@ func (client *Client) notifyBlackList(sender domain.User) {
 	client.send <- message.encode()
 }
 
-func (client *Client) GetUid() string {
-	return "" //client.ID.String()
-}
-
 func (client *Client) GetName() string {
 	return client.Name
 }

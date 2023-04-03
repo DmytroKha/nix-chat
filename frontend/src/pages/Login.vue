@@ -53,7 +53,7 @@ export default {
       roomInput: null,
       rooms: [],
       user: {
-        uid: "",
+        id: "",
         name: "",
         username: "",
         password: "",
@@ -93,14 +93,14 @@ export default {
           this.loginError = "Login failed 1";
         } else {
           wsConnect.user.token = result.data.token;
-          wsConnect.user.uid = result.data.uid;
+          wsConnect.user.id = result.data.id;
           wsConnect.user.name = this.user.username;
           wsConnect.user.photo = result.data.photo
           // wsConnect.user.blackList = result.data.blackList;
           // console.log("blackList", wsConnect.user.blackList)
           //localStorage.setItem('name', this.user.username);
           //localStorage.setItem('token', this.user.token);
-          //localStorage.setItem('uid', result.data.uid);
+          //localStorage.setItem('id', result.data.id);
           //this.connect();
           router.push({ path: "/dashboard" });
         }
