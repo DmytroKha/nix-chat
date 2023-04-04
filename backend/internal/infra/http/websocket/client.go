@@ -233,6 +233,15 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 
 	case RemoveFromBlackListAction:
 		client.handleRemoveFromBlackListMessage(message, ctx)
+
+	case AddFriendAction:
+		client.handleJoinFriendMessage(message, ctx)
+
+	case GetFriends:
+		client.handleFriends(message)
+
+	case RemoveFromFriendsAction:
+		client.handleRemoveFromFriendsMessage(message, ctx)
 	}
 
 }
@@ -269,6 +278,32 @@ func (client *Client) handleBlackList(message Message) {
 
 	msg := Message{
 		Action: GetBlackList,
+		//Target: room,
+		Sender: sender,
+		Users:  users,
+	}
+
+	client.send <- msg.encode()
+}
+
+func (client *Client) handleJoinFriendMessage(message Message, ctx context.Context) {
+	sender := message.Sender
+
+	client.joinFriend(sender, ctx)
+}
+
+func (client *Client) handleRemoveFromFriendsMessage(message Message, ctx context.Context) {
+	sender := message.Sender
+
+	client.removeFromFriends(sender, ctx)
+}
+
+func (client *Client) handleFriends(message Message) {
+	sender := message.Sender
+	users, _ := client.wsServer.userRepository.GetUserFriends(sender)
+
+	msg := Message{
+		Action: GetFriends,
 		//Target: room,
 		Sender: sender,
 		Users:  users,
@@ -484,6 +519,55 @@ func (client *Client) removeFromBlackList(sender domain.User, ctx context.Contex
 
 }
 
+func (client *Client) joinFriend(sender domain.User, ctx context.Context) {
+
+	senderId := sender.GetId()
+	userId := client.ID
+	strUserId := strconv.Itoa(int(userId))
+	strSenderId := strconv.Itoa(int(senderId))
+	roomName := ""
+
+	if userId < senderId {
+		roomName = strUserId + strSenderId
+	} else {
+		roomName = strSenderId + strUserId
+	}
+	room := client.wsServer.findRoomByName(roomName, ctx)
+	friend, _ := client.wsServer.friendlistService.Find(userId, room.GetId())
+	var emptyFriend database.Friendlist
+	if friend == emptyFriend {
+		friend.UserId = userId
+		friend.FriendId = senderId
+		friend.RoomId = room.GetId()
+		friend, _ = client.wsServer.friendlistService.Save(friend)
+	}
+
+	client.notifyFriends(sender)
+
+}
+
+func (client *Client) removeFromFriends(sender domain.User, ctx context.Context) {
+
+	senderId := sender.GetId()
+	userId := client.ID
+	strUserId := strconv.Itoa(int(userId))
+	strSenderId := strconv.Itoa(int(senderId))
+	roomName := ""
+
+	if userId < senderId {
+		roomName = strUserId + strSenderId
+	} else {
+		roomName = strSenderId + strUserId
+	}
+	room := client.wsServer.findRoomByName(roomName, ctx)
+	friend, _ := client.wsServer.friendlistService.Find(userId, room.GetId())
+	var emptyFriend database.Friendlist
+	if friend != emptyFriend {
+		_ = client.wsServer.blacklistService.Delete(friend.Id)
+	}
+
+}
+
 // New method
 // Check if the client is not yet in the room
 func (client *Client) isInRoom(room *Room) bool {
@@ -522,6 +606,19 @@ func (client *Client) notifyBlackList(sender domain.User) {
 	//users = append(users, user)
 	message := Message{
 		Action: AddToBlackListAction,
+		//Target: room,
+		Sender: sender,
+		//Users:  users,
+	}
+
+	client.send <- message.encode()
+}
+
+func (client *Client) notifyFriends(sender domain.User) {
+	//var users []domain.User
+	//users = append(users, user)
+	message := Message{
+		Action: AddFriendAction,
 		//Target: room,
 		Sender: sender,
 		//Users:  users,
