@@ -17,7 +17,7 @@ type blacklistRepository struct {
 	sess *gorm.DB
 }
 
-type BlackListRepository interface {
+type BlacklistRepository interface {
 	Save(bl Blacklist) (Blacklist, error)
 	Delete(id int64) error
 	Find(userId, roomId int64) (Blacklist, error)
@@ -25,7 +25,7 @@ type BlackListRepository interface {
 	//GetUserBlackList(user domain.User) ([]domain.User, error)
 }
 
-func NewBlacklistRepository(dbSession *gorm.DB) BlackListRepository {
+func NewBlacklistRepository(dbSession *gorm.DB) BlacklistRepository {
 	return &blacklistRepository{
 		sess: dbSession,
 	}

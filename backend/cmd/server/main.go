@@ -65,9 +65,12 @@ func main() {
 	blacklistRepository := database.NewBlacklistRepository(db)
 	blacklistService := app.NewBlacklistService(blacklistRepository)
 
+	friendlistRepository := database.NewFriendlistRepository(db)
+	friendlistService := app.NewFriendlistService(friendlistRepository)
+
 	roomRepository := database.NewRoomRepository(db)
 
-	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository, blacklistService)
+	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository, blacklistService, friendlistService)
 	go wsServer.Run(ctx)
 
 	authService := app.NewAuthService(userService, conf)

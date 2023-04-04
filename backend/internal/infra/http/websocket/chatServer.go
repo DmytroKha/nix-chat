@@ -20,22 +20,24 @@ type WsServer struct {
 	broadcast  chan []byte
 	rooms      map[*Room]bool
 	//users          []database.User
-	users            []domain.User
-	roomRepository   domain.RoomRepository
-	userRepository   database.UserRepository
-	blacklistService app.BlacklistService
+	users             []domain.User
+	roomRepository    domain.RoomRepository
+	userRepository    database.UserRepository
+	blacklistService  app.BlacklistService
+	friendlistService app.FriendlistService
 }
 
 // NewWebsocketServer creates a new WsServer type
-func NewWebsocketServer(roomRepository domain.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService) *WsServer {
+func NewWebsocketServer(roomRepository domain.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
 	wsServer := &WsServer{
-		clients:          make(map[*Client]bool),
-		register:         make(chan *Client),
-		unregister:       make(chan *Client),
-		rooms:            make(map[*Room]bool),
-		roomRepository:   roomRepository,
-		userRepository:   userRepository,
-		blacklistService: blacklistService,
+		clients:           make(map[*Client]bool),
+		register:          make(chan *Client),
+		unregister:        make(chan *Client),
+		rooms:             make(map[*Room]bool),
+		roomRepository:    roomRepository,
+		userRepository:    userRepository,
+		blacklistService:  blacklistService,
+		friendlistService: friendlistService,
 	}
 
 	// Add users from database to server

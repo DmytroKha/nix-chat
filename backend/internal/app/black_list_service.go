@@ -13,10 +13,10 @@ type BlacklistService interface {
 }
 
 type blacklistService struct {
-	blRepo database.BlackListRepository
+	blRepo database.BlacklistRepository
 }
 
-func NewBlacklistService(r database.BlackListRepository) BlacklistService {
+func NewBlacklistService(r database.BlacklistRepository) BlacklistService {
 	return blacklistService{
 		blRepo: r,
 	}

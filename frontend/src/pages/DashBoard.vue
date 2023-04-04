@@ -62,8 +62,22 @@
           </div>
         </div>
         <div>
-          <h2 v-on:click="showUsersList = 3">white list</h2>
-          <div v-if="showUsersList == 3">users from white list</div>
+          <h2 v-on:click="showUsersList = 3">friends</h2>
+          <div v-if="showUsersList == 3">users from the friend list
+            <div class="row" v-if="friends.length">
+              <div class="col-2 card profile"  v-for="user in friends" :key="user.id">
+                <div class="card-header">{{ user.name }}</div>
+                <div class="card-body">
+                  <button class="btn btn-primary" @click="joinPrivateRoom(user)">
+                    Send msg
+                  </button>
+                  <button class="btn btn-primary" @click="removeFromFriendList(user)">
+                    Remove from friends
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <h2 v-on:click="showUsersList = 4">black list</h2>
@@ -290,6 +304,14 @@ export default {
             this.handleAllRoomsJoined(msg);
             wsConnect.rooms = this.rooms;
             break;
+          case "add-friend":
+            this.friends = wsConnect.user.friends;
+            this.handleFriendsJoined(msg);
+            wsConnect.user.friends = this.friends;
+            break;
+          case "get-friends":
+            this.handleFriends(msg);
+            break;
           case "add-to-black-list":
             this.blackList = wsConnect.user.blackList;
             this.handleBlackListJoined(msg);
@@ -365,6 +387,21 @@ export default {
     //      this.users.push(msg.users[i])
     //   }
     // },
+    handleFriendsJoined(msg) {
+      const usr = wsConnect.user;
+      if (typeof usr !== "undefined") {
+        var inList = false
+        for (let i = 0; i < this.friends.length; i++) {
+          if (this.friends[i].id == msg.sender.id) {
+            inList = true;
+            break;
+          }
+        }
+        if (!inList) {
+          usr.friends.push(msg.sender);
+        }
+      }
+    },
     handleBlackListJoined(msg) {
       const usr = wsConnect.user;
       if (typeof usr !== "undefined") {
@@ -378,6 +415,16 @@ export default {
       if (!inList) {
           usr.blackList.push(msg.sender);
       }
+      }
+    },
+    handleFriends(msg) {
+      console.log("1. friend", msg);
+      console.log("2. friend", msg.users);
+      var friends = msg.users;
+      if (typeof friends !== "undefined") {
+        for (let i = 0; i < friends.length; i++) {
+          this.friends.push(msg.users[i]);
+        }
       }
     },
     handleBlackList(msg) {
@@ -456,8 +503,19 @@ export default {
     },
     addFriend(friend) {
       wsConnect.ws.send(
-        JSON.stringify({ action: "add-friend", message: friend.id.toString() })
+        JSON.stringify({ action: "add-friend", sender: friend })
       );
+    },
+    removeFromFriendList(friend) {
+      console.log("removeFromFriendList", friend);
+      wsConnect.ws.send(JSON.stringify({ action: "remove-from-friend-list", sender: friend }));
+
+      for (let i = 0; i < this.friends.length; i++) {
+        if (this.friends[i].id === friend.id) {
+          this.friends.splice(i, 1);
+          break;
+        }
+      }
     },
     addToBlackList(bl) {
       wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", sender: bl }));

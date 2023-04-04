@@ -19,6 +19,8 @@ const GetAllRooms = "all-rooms"
 const ChangeNameAction = "change-username"
 const GetBlackList = "get-black-list"
 const RemoveFromBlackListAction = "remove-from-black-list"
+const GetFriends = "get-friends"
+const RemoveFromFriendsAction = "remove-from-friends"
 
 //const GetOnlineUsers = "on-line-users"
 
