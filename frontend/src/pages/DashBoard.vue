@@ -12,8 +12,12 @@
         <div>
           <h2 v-on:click="showUsersList = 1">on-line</h2>
           <div v-if="showUsersList == 1">on-line users
+            <div class="input-group">
+            <input type="text" v-model="search">
+            </div>
             <div class="row" v-if="users.length">
-              <div class="col-2 card profile"  v-for="user in users" :key="user.id">
+<!--              <div class="col-2 card profile"  v-for="user in users" :key="user.id">-->
+              <div class="col-2 card profile"  v-for="user in usersByName" :key="user.id">
                 <div class="card-header">{{ user.name }}</div>
                 <div class="card-body">
                   <button class="btn btn-primary" @click="joinPrivateRoom(user)">
@@ -196,11 +200,17 @@ export default {
       maxReconnectDelay: 16000,
       loginError: "",
       newRoom: true,
+      search: "",
     };
   },
   //beforeMount() {
   //  this.connect();
   //},
+  computed: {
+    usersByName() {
+      return this.users.filter(item => item.name.indexOf(this.search) !== -1)
+    },
+  },
   mounted: function () {
     // this.user.name = localStorage.getItem("name");
     // this.user.token = localStorage.getItem("token");
@@ -508,7 +518,7 @@ export default {
     },
     removeFromFriendList(friend) {
       console.log("removeFromFriendList", friend);
-      wsConnect.ws.send(JSON.stringify({ action: "remove-from-friend-list", sender: friend }));
+      wsConnect.ws.send(JSON.stringify({ action: "remove-from-friends", sender: friend }));
 
       for (let i = 0; i < this.friends.length; i++) {
         if (this.friends[i].id === friend.id) {

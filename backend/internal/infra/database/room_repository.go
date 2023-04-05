@@ -38,13 +38,19 @@ func (room *Room) GetPrivate() bool {
 func (rr roomRepository) Save(r domain.Room) (domain.Room, error) {
 	var room Room
 	//room.Uid = r.GetUid()
-	room.Id = r.GetId()
+	//room.Id = r.GetId()
 	room.Name = r.GetName()
 	room.Private = r.GetPrivate()
 	err := rr.sess.Table(RoomTableName).Create(&room).Error
 	if err != nil {
 		return nil, err
 	}
+	//var newRoom domain.Room
+	//r, ok = newRoom.(*room)
+	var rooms []domain.Room
+	rooms = append(rooms, &room)
+	r = rooms[0]
+
 	return r, nil
 }
 
