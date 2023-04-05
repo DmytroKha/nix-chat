@@ -484,6 +484,9 @@ func (client *Client) joinToBlackList(sender domain.User, ctx context.Context) {
 		roomName = strSenderId + strUserId
 	}
 	room := client.wsServer.findRoomByName(roomName, ctx)
+	if room == nil {
+		room = client.wsServer.createRoom(roomName, sender != nil, ctx)
+	}
 	bl, _ := client.wsServer.blacklistService.Find(userId, room.GetId())
 	var emptyBl database.Blacklist
 	if bl == emptyBl {
@@ -533,6 +536,9 @@ func (client *Client) joinFriend(sender domain.User, ctx context.Context) {
 		roomName = strSenderId + strUserId
 	}
 	room := client.wsServer.findRoomByName(roomName, ctx)
+	if room == nil {
+		room = client.wsServer.createRoom(roomName, sender != nil, ctx)
+	}
 	friend, _ := client.wsServer.friendlistService.Find(userId, room.GetId())
 	var emptyFriend database.Friendlist
 	if friend == emptyFriend {
@@ -563,7 +569,7 @@ func (client *Client) removeFromFriends(sender domain.User, ctx context.Context)
 	friend, _ := client.wsServer.friendlistService.Find(userId, room.GetId())
 	var emptyFriend database.Friendlist
 	if friend != emptyFriend {
-		_ = client.wsServer.blacklistService.Delete(friend.Id)
+		_ = client.wsServer.friendlistService.Delete(friend.Id)
 	}
 
 }
