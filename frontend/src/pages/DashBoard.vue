@@ -101,23 +101,6 @@
         </div>
       </div>
       <div class="main">
-<!--        <div class="row" v-if="users.length">-->
-<!--          <div class="col-2 card profile"  v-for="user in users" :key="user.id">-->
-<!--            <div class="card-header">{{ user.name }}</div>-->
-<!--            <div class="card-body">-->
-<!--              <button class="btn btn-primary" @click="joinPrivateRoom(user)">-->
-<!--                Send Message-->
-<!--              </button>-->
-<!--              <button class="btn btn-primary" @click="addFriend(user)">-->
-<!--                Add to friend list-->
-<!--              </button>-->
-<!--              <button class="btn btn-primary" @click="addFoe(user)">-->
-<!--                Add to black list-->
-<!--              </button>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-
         <div class="chat" v-for="(room, key) in chatRooms" :key="key">
           <div class="card">
             <div class="card-header msg_head">
@@ -167,9 +150,10 @@
 </template>
 
 <script>
+
 import router from "../router";
 import { wsConnect } from "@/services/WSConnectService";
-// import wsConnect from "../services/WSConnectService";
+
 export default {
   name: "DashBoard",
   props: {
@@ -177,21 +161,12 @@ export default {
   },
   data() {
     return {
-      //showWhiteListUsers: true,
-      //showOnlineListUsers: true,
       showUsersList: 1,
       ws: null,
       serverUrl: "ws://localhost:8080/ws",
       roomInput: null,
       rooms: [],
       chatRooms: [],
-      // user: {
-      //   id: "",
-      //   name: "",
-      //   token: "",
-      //   friends: [],
-      //   blackList: [],
-      // },
       friends: [],
       blackList: [],
       users: [],
@@ -203,24 +178,18 @@ export default {
       search: "",
     };
   },
-  //beforeMount() {
-  //  this.connect();
-  //},
   computed: {
     usersByName() {
       return this.users.filter(item => item.name.indexOf(this.search) !== -1)
     },
   },
   mounted: function () {
-    // this.user.name = localStorage.getItem("name");
-    // this.user.token = localStorage.getItem("token");
       if(
           !wsConnect.ws
     )
      {
     this.connect();
     } else {
-        //console.log("1 users", this.users)
         this.users = wsConnect.users;
         this.rooms = wsConnect.rooms;
         this.chatRooms = wsConnect.chatRooms;
@@ -233,14 +202,8 @@ export default {
       router.push({ path: "/profile" });
     },
     logout() {
-      // localStorage.removeItem("name");
-      // localStorage.removeItem("token");
-      // localStorage.removeItem("id");
-      // localStorage.removeItem("ws");
-      // console.log(this.user.name);
       for (let i = 0; i < wsConnect.users.length; i++) {
         if (this.users[i].id == wsConnect.user.id) {
-          //console.log("user-left", wsConnect.users[i]);
           wsConnect.ws.send(
             JSON.stringify({ action: "user-left", sender: wsConnect.users[i] })
           );
@@ -248,18 +211,12 @@ export default {
           break;
         }
       }
-      //this.handleUserLeft({ action: "user-left", sender: this.user})
-      //console.log("logout", wsConnect.user);
-      // this.ws.send(
-      //     JSON.stringify({ action: "user-left", message: wsConnect.user })
-      // );
       wsConnect.ws = null;
       router.push({ path: "/" });
     },
     connect() {
       wsConnect.connectToWebsocket();
       this.connectToWebsocket();
-      //this.getAllRooms();
     },
     connectToWebsocket() {
       wsConnect.ws.addEventListener("message", (event) => {
@@ -340,24 +297,16 @@ export default {
       if (typeof room !== "undefined") {
         room.messages.push(msg);
       }
-      console.log("->send-message", msg)
-      console.log("->room", room)
     },
     handleUserJoined(msg) {
-      console.log('++++',msg.sender)
-      console.log('++++',this.users)
       if (!this.userExists(msg.sender)) {
         this.users.push(msg.sender);
-        // console.log('++++',this.users)
-        // console.log('++++',msg.sender)
       }
     },
     handleUserLeft(msg) {
       for (let i = 0; i < this.users.length; i++) {
         if (this.users[i].id == msg.sender.id) {
           this.users.splice(i, 1);
-          // console.log('---',this.users)
-          // console.log('---',msg.sender)
           return;
         }
       }
@@ -367,21 +316,14 @@ export default {
       this.room.name = this.room.private ? msg.sender.name : this.room.name;
       this.room["messages"] = [];
       this.chatRooms.push(this.room);
-      console.log("0. rooms", this.chatRooms);
-      console.log("1. rooms", this.rooms);
-      console.log("2. room", this.room.id);
-      console.log("2.1. room", this.room.private);
       this.newRoom = !this.room.private
       for (let i = 0; i < this.rooms.length; i++) {
-        console.log("4. room", this.rooms[i].id);
         if (this.rooms[i].id === this.room.id) {
           this.newRoom = false
-          console.log("5. newRoom",  this.newRoom);
         }
       }
       if (this.newRoom == true) {
         this.rooms.push(this.room);
-        console.log("6. rooms",  this.rooms);
       }
     },
     handleAllRoomsJoined(msg) {
@@ -389,14 +331,7 @@ export default {
       this.room.name = this.room.private ? msg.sender.name : this.room.name;
       this.room["messages"] = [];
       this.rooms.push(this.room);
-      //console.log("rooms", this.rooms);
     },
-    // handleOnlineUsers(msg) {
-    //   this.users = [];
-    //   for (let i = 0; i < msg.users.length; i++) {
-    //      this.users.push(msg.users[i])
-    //   }
-    // },
     handleFriendsJoined(msg) {
       const usr = wsConnect.user;
       if (typeof usr !== "undefined") {
@@ -428,8 +363,6 @@ export default {
       }
     },
     handleFriends(msg) {
-      console.log("1. friend", msg);
-      console.log("2. friend", msg.users);
       var friends = msg.users;
       if (typeof friends !== "undefined") {
         for (let i = 0; i < friends.length; i++) {
@@ -438,8 +371,6 @@ export default {
       }
     },
     handleBlackList(msg) {
-      console.log("1. bl", msg);
-      console.log("2. bl", msg.users);
       var blackList = msg.users;
       if (typeof blackList !== "undefined") {
         for (let i = 0; i < blackList.length; i++) {
@@ -449,8 +380,6 @@ export default {
     },
     sendMessage(room) {
       if (room.newMessage !== "") {
-        console.log("<-send-message", room.newMessage)
-        console.log("<-room", room)
         wsConnect.ws.send(
           JSON.stringify({
             action: "send-message",
@@ -465,7 +394,6 @@ export default {
       }
     },
     findRoom(roomId) {
-      console.log("<->room", roomId)
       for (let i = 0; i < this.chatRooms.length; i++) {
         if (this.chatRooms[i].id === roomId) {
           return this.chatRooms[i];
@@ -474,25 +402,15 @@ export default {
     },
     joinRoom(roomName) {
       wsConnect.ws.send(
-        //JSON.stringify({ action: "join-room", message: this.roomInput })
           JSON.stringify({ action: "join-room", message: roomName })
       );
       this.roomInput = "";
     },
     getAllRooms() {
-      console.log("--------rooms", this.rooms)
-      console.log("--------chatRooms", this.chatRooms)
       wsConnect.ws.send(
           JSON.stringify({ action: "all-rooms"})
       );
-      console.log("+++++++++rooms", this.rooms)
-      console.log("+++++++++chatRooms", this.chatRooms)
     },
-    // getOnlineUsers() {
-    //   wsConnect.ws.send(
-    //       JSON.stringify({ action: "on-line-users", message: "get on-line users" })
-    //   );
-    //},
     leaveRoom(room) {
       wsConnect.ws.send(JSON.stringify({ action: "leave-room", message: room.id.toString() }));
 
@@ -504,9 +422,6 @@ export default {
       }
     },
     joinPrivateRoom(room) {
-      console.log("room.id", room.id)
-      console.log("0. room.id", this.chatRooms);
-      console.log("1. room.id", this.rooms);
       wsConnect.ws.send(
         JSON.stringify({ action: "join-room-private", message: room.id.toString() })
       );
@@ -517,9 +432,7 @@ export default {
       );
     },
     removeFromFriendList(friend) {
-      console.log("removeFromFriendList", friend);
       wsConnect.ws.send(JSON.stringify({ action: "remove-from-friends", sender: friend }));
-
       for (let i = 0; i < this.friends.length; i++) {
         if (this.friends[i].id === friend.id) {
           this.friends.splice(i, 1);
@@ -531,9 +444,7 @@ export default {
       wsConnect.ws.send(JSON.stringify({ action: "add-to-black-list", sender: bl }));
     },
     removeFromBlackList(bl) {
-      console.log("removeFromBlackList", bl);
       wsConnect.ws.send(JSON.stringify({ action: "remove-from-black-list", sender: bl }));
-
       for (let i = 0; i < this.blackList.length; i++) {
         if (this.blackList[i].id === bl.id) {
           this.blackList.splice(i, 1);

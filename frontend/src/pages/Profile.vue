@@ -84,49 +84,17 @@ export default {
         newPassword: "",
         photo: "",
       },
-      // name: "",
-      // oldPassword: "",
-      // newPassword: "",
-      // avatarLink: "",
       profileError: "",
     };
   },
-  beforeMount() {
-    //this.getUserData();
-  },
   mounted: function () {
     this.user.name = wsConnect.user.name;
-    //this.user.photo = "./logo1.png"
     this.user.photo = wsConnect.user.photo
-    //this.user.photo = "./.../6b3bcfca-a5cb-4b38-bd32-327a70d8853e.png"
-    // console.log("photo", this.user.photo)
-    // this.user.token = localStorage.getItem('token');
-    // this.user.id = localStorage.getItem('id');
   },
   methods: {
     navigate() {
       router.push({ path: "/dashboard" });
-      //localStorage.removeItem('name');
-      //localStorage.removeItem('token');
-      //localStorage.removeItem('id');
     },
-    // async getUserData() {
-    //   try {
-    //     const result = await this.axios.get(
-    //       "http://localhost:8080/api/v1/users/me"
-    //     );
-    //     if (
-    //       result.data.status !== "undefined" &&
-    //       result.data.status == "error"
-    //     ) {
-    //       console.log("Change password failed 1");
-    //     } else {
-    //       this.user = result.data;
-    //     }
-    //   } catch (e) {
-    //     console.log(e);
-    //   }
-    // },
     async changePass() {
       try {
         const result = await this.axios.put(
@@ -190,11 +158,6 @@ export default {
             "http://localhost:8080/api/v1/users/change_avtr?bearer="+
             wsConnect.user.token,
             e.target.files[0]
-            // {
-            //   headers: {
-            //     "Content-Type": "multipart/form-data",
-            //   },
-            // }
         );
         if (
           result.data.status !== "undefined" &&

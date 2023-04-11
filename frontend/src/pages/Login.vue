@@ -50,24 +50,11 @@ export default {
     return {
       ws: null,
       serverUrl: "ws://localhost:8080/ws",
-      roomInput: null,
-      rooms: [],
       user: {
-        id: "",
         name: "",
         username: "",
         password: "",
-        confirmPassword: "",
-        oldPassword: "",
-        newPassword: "",
-        token: "",
-        friends: [],
-        blackList: [],
       },
-      users: [],
-      initialReconnectDelay: 1000,
-      currentReconnectDelay: 0,
-      maxReconnectDelay: 16000,
       loginError: "",
     };
   },
@@ -96,18 +83,11 @@ export default {
           wsConnect.user.id = result.data.id;
           wsConnect.user.name = this.user.username;
           wsConnect.user.photo = result.data.photo
-          // wsConnect.user.blackList = result.data.blackList;
-          // console.log("blackList", wsConnect.user.blackList)
-          //localStorage.setItem('name', this.user.username);
-          //localStorage.setItem('token', this.user.token);
-          //localStorage.setItem('id', result.data.id);
-          //this.connect();
           router.push({ path: "/dashboard" });
         }
       } catch (e) {
         this.loginError = "Login failed 2";
         console.log(e);
-        //router.push({ path: "/dashboard" });
       }
     },
   },
