@@ -102,7 +102,7 @@
       </div>
       <div class="main">
         <div class="chat" v-for="(room, key) in chatRooms" :key="key">
-          <div class="card">
+          <div class="card_msg">
             <div class="card-header msg_head">
               <div class="d-flex bd-highlight justify-content-center">
                 {{ room.name }}
@@ -503,6 +503,15 @@ export default {
   border-radius: 10px;
   background-color: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card_msg {
+  height: 500px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow:hidden;
+  overflow-y:scroll;
 }
 
 .card.profile {
