@@ -21,14 +21,14 @@ type WsServer struct {
 	rooms      map[*Room]bool
 	//users          []database.User
 	users             []domain.User
-	roomRepository    domain.RoomRepository
+	roomRepository    database.RoomRepository
 	userRepository    database.UserRepository
 	blacklistService  app.BlacklistService
 	friendlistService app.FriendlistService
 }
 
 // NewWebsocketServer creates a new WsServer type
-func NewWebsocketServer(roomRepository domain.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
+func NewWebsocketServer(roomRepository database.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
 	wsServer := &WsServer{
 		clients:           make(map[*Client]bool),
 		register:          make(chan *Client),

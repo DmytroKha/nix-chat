@@ -41,6 +41,22 @@ services:
     networks:
       - default
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app
+
+  web:
+    build: ../nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+
 volumes:
   my-db:
 

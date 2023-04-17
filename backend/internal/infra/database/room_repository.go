@@ -17,7 +17,13 @@ type roomRepository struct {
 	sess *gorm.DB
 }
 
-func NewRoomRepository(dbSession *gorm.DB) domain.RoomRepository {
+type RoomRepository interface {
+	Save(room domain.Room) (domain.Room, error)
+	FindByName(name string) (domain.Room, error)
+	FindAll() ([]domain.Room, error)
+}
+
+func NewRoomRepository(dbSession *gorm.DB) RoomRepository {
 	return &roomRepository{
 		sess: dbSession,
 	}
