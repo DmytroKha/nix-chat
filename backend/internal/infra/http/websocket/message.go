@@ -21,15 +21,12 @@ const RemoveFromBlackListAction = "remove-from-black-list"
 const GetFriends = "get-friends"
 const RemoveFromFriendsAction = "remove-from-friends"
 
-//const GetOnlineUsers = "on-line-users"
-
 type Message struct {
 	Action  string        `json:"action"`
 	Message string        `json:"message"`
 	Target  *Room         `json:"target"`
 	Sender  domain.User   `json:"sender"`
 	Users   []domain.User `json:"users"`
-	//SenderId int64 `json:"senderId"`
 }
 
 func (message *Message) encode() []byte {
@@ -46,7 +43,6 @@ func (message *Message) UnmarshalJSON(data []byte) error {
 	type Alias Message
 	msg := &struct {
 		Sender Client `json:"sender"`
-		//SenderId int64 `json:"senderId"`
 		*Alias
 	}{
 		Alias: (*Alias)(message),
@@ -55,6 +51,5 @@ func (message *Message) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	message.Sender = &msg.Sender
-	//message.SenderId = msg.SenderId
 	return nil
 }

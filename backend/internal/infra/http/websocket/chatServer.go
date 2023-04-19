@@ -14,12 +14,11 @@ import (
 const PubSubGeneralChannel = "general"
 
 type WsServer struct {
-	clients    map[*Client]bool
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan []byte
-	rooms      map[*Room]bool
-	//users          []database.User
+	clients           map[*Client]bool
+	register          chan *Client
+	unregister        chan *Client
+	broadcast         chan []byte
+	rooms             map[*Room]bool
 	users             []domain.User
 	roomRepository    database.RoomRepository
 	userRepository    database.UserRepository
@@ -39,9 +38,6 @@ func NewWebsocketServer(roomRepository database.RoomRepository, userRepository d
 		blacklistService:  blacklistService,
 		friendlistService: friendlistService,
 	}
-
-	// Add users from database to server
-	//wsServer.users, _ = userRepository.FindAll()
 
 	return wsServer
 }
@@ -101,83 +97,28 @@ func (server *WsServer) createRoom(name string, private bool, ctx context.Contex
 func (server *WsServer) findAllRooms(ctx context.Context) []domain.Room {
 	rooms, _ := server.roomRepository.FindAll()
 
-	//for i := range rooms {
-	//	dbRoom := rooms[i]
-	//	var room *Room
-	//	for r := range server.rooms {
-	//		if r.GetName() == dbRoom.GetName() {
-	//			dbRoom = nil
-	//			break
-	//		}
-	//	}
-	//	if dbRoom != nil {
-	//		room = NewRoom(dbRoom.GetName(), dbRoom.GetPrivate())
-	//		room.ID, _ = uuid.Parse(dbRoom.GetUid())
-	//
-	//		go room.RunRoom(ctx)
-	//		server.rooms[room] = true
-	//
-	//	}
-	//}
-
 	return rooms
 }
 
 func (server *WsServer) listOnlineClients(client *Client) {
 	var uniqueUsers = make(map[int64]bool)
 	for _, user := range server.users {
-		//if user.GetUid() == client.GetUid() {
-		//if ok := uniqueUsers[user.GetUid()]; !ok {
 		if ok := uniqueUsers[user.GetId()]; !ok {
-			//if ok := uniqueUsers[user.Id]; !ok {
 			message := &Message{
 				Action: UserJoinedAction,
 				Sender: user,
-				//SenderId: user.Id,
 			}
 			uniqueUsers[user.GetId()] = true
-			//uniqueUsers[user.Id] = true
 			client.send <- message.encode()
 		}
-		//}
 	}
 }
-
-//func (server *WsServer) checkOnlineClients(ctx context.Context) {
-//	for _, user := range server.users {
-//		message := &Message{
-//			Action: GetOnlineUsers,
-//			Sender: user,
-//			//SenderId: user.Id,
-//		}
-//		if err := config.Redis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
-//			log.Println(err)
-//		}
-//	}
-//
-//	//for room := range rooms {
-//	//	client.rooms[room] = true
-//	//	room.register <- client
-//	//
-//	//	client.notifyRoomJoined(room, sender)
-//	//}
-//	//message := Message{
-//	//	Action: RoomJoinedAction,
-//	//	Target: room,
-//	//	Sender: sender,
-//	//	//SenderId: senderId,
-//	//}
-//	//
-//	//client.send <- message.encode()
-//}
 
 func (server *WsServer) registerClient(client *Client, ctx context.Context) {
 	id := client.ID
 	if user := server.findUserByID(id); user == nil {
 		// Add user to the repo
 		var userRepo database.User
-		//userRepo.Uid = client.GetUid()
-		//userRepo.Id = client.GetUid()
 		userRepo.Name = client.GetName()
 		server.userRepository.Save(userRepo)
 	}
@@ -243,7 +184,6 @@ func (server *WsServer) publishClientJoined(client *Client, ctx context.Context)
 	message := &Message{
 		Action: UserJoinedAction,
 		Sender: client,
-		//SenderId: client.ID,
 	}
 
 	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
@@ -257,7 +197,6 @@ func (server *WsServer) publishClientLeft(client *Client, ctx context.Context) {
 	message := &Message{
 		Action: UserLeftAction,
 		Sender: client,
-		//SenderId: client.ID,
 	}
 
 	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
@@ -287,8 +226,6 @@ func (server *WsServer) listenPubSubChannel(ctx context.Context) {
 			server.handleUserLeft(message)
 		case JoinRoomPrivateAction:
 			server.handleUserJoinPrivate(message, ctx)
-			//case GetOnlineUsers:
-			//	server.handleOnlineUsers(message)
 		}
 
 	}
@@ -297,18 +234,7 @@ func (server *WsServer) listenPubSubChannel(ctx context.Context) {
 func (server *WsServer) handleUserJoined(message Message) {
 
 	server.users = append(server.users, message.Sender)
-	//user, err := server.userRepository.Find(message.SenderId)
-	//if err != nil {
-	//	log.Printf("handleUserJoined: %s", err)
-	//}
-	//server.users = append(server.users, user)
 	server.broadcastToClients(message.encode())
-
-}
-
-func (server *WsServer) handleOnlineUsers(message Message) {
-
-	//server.broadcastToClients(message.encode())
 
 }
 
@@ -316,7 +242,6 @@ func (server *WsServer) handleUserLeft(message Message) {
 	// Remove the user from the slice
 	for i, user := range server.users {
 		if user.GetId() == message.Sender.GetId() {
-			//if user.Id == message.SenderId {
 			server.users[i] = server.users[len(server.users)-1]
 			server.users = server.users[:len(server.users)-1]
 			break // added this break to only remove the first occurrence
@@ -327,11 +252,9 @@ func (server *WsServer) handleUserLeft(message Message) {
 
 func (server *WsServer) findUserByID(ID int64) domain.User {
 	var foundUser domain.User
-	//var foundUser database.User
 	for _, client := range server.users {
 		id := client.GetId()
 		if id == ID {
-			//if client.Id == ID {
 			foundUser = client
 			break
 		}
@@ -348,10 +271,8 @@ func (server *WsServer) findUserByID(ID int64) domain.User {
 
 func (server *WsServer) handleUserJoinPrivate(message Message, ctx context.Context) {
 	clientId, _ := strconv.Atoi(message.Message)
-	//targetClients := server.findClientsByID(message.Message)
 	targetClients := server.findClientsByID(int64(clientId))
 	for _, targetClient := range targetClients {
-		//targetClient.joinRoom(message.Target.GetName(), message.SenderId, ctx)
 		targetClient.joinRoom(message.Target.GetName(), message.Sender, ctx)
 	}
 }

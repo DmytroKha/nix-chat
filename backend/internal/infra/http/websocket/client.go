@@ -3,7 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/DmytroKha/nix-chat/config"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
@@ -159,7 +159,7 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 	c := ctx.Request().Context()
 	userCtxValue := c.Value("user")
 	if userCtxValue == nil {
-		err := fmt.Errorf("Not authenticated")
+		err := errors.New("not authenticated")
 		log.Println(err)
 		return err
 	}
@@ -176,7 +176,6 @@ func ServeWs(wsServer *WsServer, ctx echo.Context) error {
 
 	go client.writePump()
 	go client.readPump()
-	//go client.readPump(context.Background())
 	wsServer.register <- client
 
 	return nil
@@ -217,8 +216,6 @@ func (client *Client) handleNewMessage(jsonMessage []byte, ctx context.Context) 
 	case GetAllRooms:
 		client.handleJoinAllRoomsMessage(message, ctx)
 
-		//case GetOnlineUsers:
-		//	client.handleJoinOnlineUsersMessage(ctx)
 	case UserJoinedAction:
 		client.handleUserJoinMessage(message)
 
@@ -278,7 +275,6 @@ func (client *Client) handleBlackList(message Message) {
 
 	msg := Message{
 		Action: GetBlackList,
-		//Target: room,
 		Sender: sender,
 		Users:  users,
 	}
@@ -304,7 +300,6 @@ func (client *Client) handleFriends(message Message) {
 
 	msg := Message{
 		Action: GetFriends,
-		//Target: room,
 		Sender: sender,
 		Users:  users,
 	}
@@ -312,23 +307,10 @@ func (client *Client) handleFriends(message Message) {
 	client.send <- msg.encode()
 }
 
-//func (client *Client) handleJoinOnlineUsersMessage(ctx context.Context) {
-//	//client.wsServer.publishClientJoined(client, ctx)
-//	//client.wsServer.listOnlineClients(client)
-//	//client.wsServer.checkOnlineClients(ctx)
-//	message := &Message{
-//		Action: GetOnlineUsers,
-//		Sender: client,
-//		Users:  client.wsServer.users,
-//	}
-//	client.send <- message.encode()
-//}
-
 // Refactored method
 // Added nil check
 func (client *Client) handleLeaveRoomMessage(message Message) {
 	roomId, _ := strconv.Atoi(message.Message)
-	//room := client.wsServer.findRoomByID(message.Message)
 	room := client.wsServer.findRoomByID(int64(roomId))
 	if room == nil {
 		return
@@ -341,16 +323,8 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 }
 
 func (client *Client) handleUserLeaveMessage(message Message) {
-	//client.wsServer.publishClientLeft(client, ctx)
-	//message := &Message{
-	//	Action: UserLeftAction,
-	//	Sender: client,
-	//}
-	//client.send <- message.encode()
-	//client.wsServer.handleUserLeft(message)
 	for i, user := range client.wsServer.users {
 		if user.GetId() == message.Sender.GetId() {
-			//if user.Id == message.SenderId {
 			client.wsServer.users[i] = client.wsServer.users[len(client.wsServer.users)-1]
 			client.wsServer.users = client.wsServer.users[:len(client.wsServer.users)-1]
 			break // added this break to only remove the first occurrence
@@ -360,14 +334,6 @@ func (client *Client) handleUserLeaveMessage(message Message) {
 }
 
 func (client *Client) handleUserJoinMessage(message Message) {
-	//client.wsServer.publishClientJoined(client, ctx)
-	//message := &Message{
-	//	Action: UserJoinedAction,
-	//	Sender: client,
-	//}
-	//client.send <- message.encode()
-	//client.wsServer.handleUserJoined(message)
-
 	if client.ID == message.Sender.GetId() && client.Name != message.Sender.GetName() {
 		client.Name = message.Sender.GetName()
 	}
@@ -384,14 +350,12 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.
 
 	userId, _ := strconv.Atoi(message.Message)
 	target := client.wsServer.findUserByID(int64(userId))
-	//target := client.wsServer.findUserByID(message.Message)
 
 	if target == nil {
 		return
 	}
 
 	// create unique room name combined to the two IDs
-	//roomName := message.Message + client.ID.String()
 	roomName := ""
 	strID := strconv.Itoa(int(client.ID))
 	if int64(userId) < client.ID {
@@ -424,7 +388,6 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.
 // Joining a room both for public and private roooms
 // When joiing a private room a sender is passed as the opposing party
 func (client *Client) joinRoom(roomName string, sender domain.User, ctx context.Context) *Room {
-	//func (client *Client) joinRoom(roomName string, senderId int64, ctx context.Context) *Room {
 
 	room := client.wsServer.findRoomByName(roomName, ctx)
 	if room == nil {
@@ -449,17 +412,10 @@ func (client *Client) joinRoom(roomName string, sender domain.User, ctx context.
 }
 
 func (client *Client) joinToAllRooms(sender domain.User, ctx context.Context) {
-	//func (client *Client) joinRoom(roomName string, senderId int64, ctx context.Context) *Room {
 
 	rooms := client.wsServer.findAllRooms(ctx)
 
-	// Don't allow to join private rooms through public room message
-	//if sender == nil && room.Private {
-	//	return nil
-	//}
 	for _, room := range rooms {
-		//client.rooms[room] = true
-		//room.register <- client
 		var r Room
 		r.ID = room.GetId()
 		r.Name = room.GetName()
@@ -590,7 +546,6 @@ func (client *Client) notifyRoomJoined(room *Room, sender domain.User) {
 		Action: RoomJoinedAction,
 		Target: room,
 		Sender: sender,
-		//SenderId: senderId,
 	}
 
 	client.send <- message.encode()
@@ -601,33 +556,24 @@ func (client *Client) notifyGetAllRooms(room *Room, sender domain.User) {
 		Action: GetAllRooms,
 		Target: room,
 		Sender: sender,
-		//SenderId: senderId,
 	}
 
 	client.send <- message.encode()
 }
 
 func (client *Client) notifyBlackList(sender domain.User) {
-	//var users []domain.User
-	//users = append(users, user)
 	message := Message{
 		Action: AddToBlackListAction,
-		//Target: room,
 		Sender: sender,
-		//Users:  users,
 	}
 
 	client.send <- message.encode()
 }
 
 func (client *Client) notifyFriends(sender domain.User) {
-	//var users []domain.User
-	//users = append(users, user)
 	message := Message{
 		Action: AddFriendAction,
-		//Target: room,
 		Sender: sender,
-		//Users:  users,
 	}
 
 	client.send <- message.encode()
@@ -652,7 +598,6 @@ func (client *Client) inviteTargetUser(target domain.User, room *Room, ctx conte
 		Message: strconv.Itoa(int(target.GetId())),
 		Target:  room,
 		Sender:  client,
-		//SenderId: client.ID,
 	}
 
 	if err := config.Redis.Publish(ctx, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {

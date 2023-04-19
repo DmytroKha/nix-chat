@@ -26,10 +26,10 @@
         <div class="input-group-append">
           <button
             class="input-group-text send_btn"
-            :disabled="isDisabled()"
+            :disabled=isDisabled
             @click="register"
           >
-            >
+            &gt;
           </button>
         </div>
       </div>
@@ -75,15 +75,17 @@ export default {
       registerError: "",
     };
   },
-  mounted: function () {},
-  methods: {
+  computed: {
     isDisabled() {
       return !(
-        this.user.confirmPassword === this.user.password &&
-        this.user.username !== "" &&
-        this.user.password !== ""
+          this.user.confirmPassword === this.user.password &&
+          this.user.username !== "" &&
+          this.user.password !== ""
       );
     },
+  },
+  mounted: function () {},
+  methods: {
     navigate() {
       router.push({ path: "/" });
     },

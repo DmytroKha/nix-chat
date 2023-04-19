@@ -22,7 +22,6 @@ type Room struct {
 // NewRoom creates a new Room
 func NewRoom(name string, private bool) *Room {
 	return &Room{
-		//ID:         0,
 		Name:       name,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),

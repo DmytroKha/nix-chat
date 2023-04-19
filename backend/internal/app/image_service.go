@@ -30,19 +30,19 @@ func NewImageService(r database.ImageRepository, s filesystem.ImageStorageServic
 func (s imageService) Save(image database.Image, content []byte) (database.Image, error) {
 	err := s.filesys.SaveImage(image.Name, content)
 	if err != nil {
-		log.Print(err)
+		log.Print("ImageService: %s", err)
 		return database.Image{}, err
 	}
 
 	img, err := s.SaveIntoDB(image)
 	if err != nil {
-		log.Print(err)
+		log.Print("ImageService: %s", err)
 		return database.Image{}, err
 	}
 
 	allImages, err := s.repo.FindAll(image.UserId)
 	if err != nil {
-		log.Print(err)
+		log.Print("ImageService: %s", err)
 		return database.Image{}, err
 	}
 
@@ -50,7 +50,7 @@ func (s imageService) Save(image database.Image, content []byte) (database.Image
 		if curImage.Id != img.Id {
 			err = s.Delete(curImage.Id)
 			if err != nil {
-				log.Print(err)
+				log.Print("ImageService: %s", err)
 				return database.Image{}, err
 			}
 		}
@@ -85,11 +85,13 @@ func (s imageService) Sync(objId int64, objImages, newImages []database.Image) e
 		if isNewImage {
 			i, err := s.repo.Find(newImage.Id)
 			if err != nil {
+				log.Print("ImageService: %s", err)
 				return err
 			}
 			i.UserId = objId
 			_, err = s.repo.Update(i)
 			if err != nil {
+				log.Print("ImageService: %s", err)
 				return err
 			}
 		}
@@ -98,6 +100,7 @@ func (s imageService) Sync(objId int64, objImages, newImages []database.Image) e
 		if _, exist := imgsNew[objImage.Id]; !exist {
 			err := s.repo.Delete(objImage.Id)
 			if err != nil {
+				log.Print("ImageService: %s", err)
 				return err
 			}
 		}
@@ -109,7 +112,7 @@ func (s imageService) SaveIntoDB(image database.Image) (database.Image, error) {
 	var img database.Image
 	img, err := s.repo.Save(image)
 	if err != nil {
-		log.Print(err)
+		log.Print("ImageService: %s", err)
 		return database.Image{}, err
 	}
 	return img, nil

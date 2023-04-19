@@ -8,8 +8,7 @@ import (
 const UserTableName = "users"
 
 type User struct {
-	Id int64 `gorm:"primary_key;auto_increment;not_null" json:"id"`
-	//Uid      string `json:"id"`
+	Id       int64  `gorm:"primary_key;auto_increment;not_null" json:"id"`
 	Name     string `json:"name"`
 	Password string
 	Image    Image

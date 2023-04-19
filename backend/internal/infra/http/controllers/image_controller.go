@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/DmytroKha/nix-chat/internal/domain"
 	"github.com/DmytroKha/nix-chat/internal/infra/database"
 	"github.com/google/uuid"
@@ -9,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/DmytroKha/nix-chat/internal/app"
@@ -25,11 +23,24 @@ func NewImageController(s app.ImageService) ImageController {
 	}
 }
 
+// AddImage godoc
+// @Summary Add an image
+// @Description Adds an image to the user's account
+// @Tags images
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param image formData file true "Image file to upload"
+// @Success 200 {string} string "Returns the URL of the uploaded image"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 403 {string} string "Forbidden"
+// @Router /images [post]
 func (c ImageController) AddImage(ctx echo.Context) error {
 
 	userCtxValue := ctx.Request().Context().Value("user")
 	if userCtxValue == nil {
-		err := fmt.Errorf("Not authenticated")
+		err := AuthErrNotAuth
 		log.Println(err)
 		return err
 	}
@@ -63,18 +74,4 @@ func (c ImageController) AddImage(ctx echo.Context) error {
 	ctx.Response().Write([]byte("../././file_storage/" + i.Name))
 
 	return nil
-}
-
-func (c ImageController) DeleteImage(ctx echo.Context) error {
-
-	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusBadRequest, err)
-	}
-	err = c.service.Delete(id)
-	if err != nil {
-		return FormatedResponse(ctx, http.StatusInternalServerError, err)
-	}
-
-	return FormatedResponse(ctx, http.StatusOK, domain.OK)
 }

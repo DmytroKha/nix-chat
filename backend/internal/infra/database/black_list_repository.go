@@ -22,7 +22,6 @@ type BlacklistRepository interface {
 	Delete(id int64) error
 	Find(userId, roomId int64) (Blacklist, error)
 	FindAll(userId int64) ([]Blacklist, error)
-	//GetUserBlackList(user domain.User) ([]domain.User, error)
 }
 
 func NewBlacklistRepository(dbSession *gorm.DB) BlacklistRepository {

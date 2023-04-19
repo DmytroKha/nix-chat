@@ -137,7 +137,9 @@
                   <span
                     class="input-group-text send_btn"
                     @click="sendMessage(room)"
-                    >></span
+                    >
+                    &gt;
+                  </span
                   >
                 </div>
               </div>
