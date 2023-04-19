@@ -10,6 +10,8 @@ import (
 	"log"
 )
 
+var UserErrChooseAnotherImage = errors.New(("this image doesn't belong you. Choose another imageId"))
+
 //go:generate mockery --dir . --name UserService --output ./mocks
 type UserService interface {
 	Save(user database.User) (database.User, error)
@@ -44,7 +46,7 @@ func (s userService) Save(u database.User) (database.User, error) {
 	}
 	user, err := s.userRepo.Save(u)
 	if err != nil {
-		log.Print(err)
+		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
 	return user, nil
@@ -68,7 +70,7 @@ func (s userService) ChangePassword(id int64, cpr requests.ChangePasswordRequest
 	}
 	updatedUser, err := s.userRepo.Update(user)
 	if err != nil {
-		log.Print(err)
+		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
 	return updatedUser, nil
@@ -93,7 +95,7 @@ func (s userService) ChangeName(id int64, name string) (database.User, error) {
 
 	updatedUser, err := s.userRepo.Update(user)
 	if err != nil {
-		log.Print(err)
+		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
 	return updatedUser, nil
@@ -116,17 +118,18 @@ func (s userService) Update(id int64, usr requests.UserRequest) (database.User, 
 		var newImages []database.Image
 		images, err = s.imageService.FindAll(user.Id)
 		if err != nil {
-			log.Print(err)
+			log.Printf("UserService: %s", err)
 			return database.User{}, err
 		}
 		if usr.ImageId > 0 {
 			image, err = s.imageService.Find(usr.ImageId)
 			if err != nil {
-				log.Print(err)
+				log.Printf("UserService: %s", err)
 				return database.User{}, err
 			}
 			if user.Id != image.UserId {
-				err = errors.New(("this image doesn't belong you. Choose another imageId"))
+				err = UserErrChooseAnotherImage
+				log.Printf("UserService: %s", err)
 				return database.User{}, err
 			}
 			newImages = []database.Image{image}
@@ -135,7 +138,7 @@ func (s userService) Update(id int64, usr requests.UserRequest) (database.User, 
 		}
 		err = s.imageService.Sync(user.Id, images, newImages)
 		if err != nil {
-			log.Print(err)
+			log.Printf("UserService: %s", err)
 			return database.User{}, err
 		}
 	}
@@ -146,7 +149,7 @@ func (s userService) Update(id int64, usr requests.UserRequest) (database.User, 
 
 	updatedUser, err := s.userRepo.Update(user)
 	if err != nil {
-		log.Print(err)
+		log.Printf("UserService: %s", err)
 		return database.User{}, err
 	}
 	return updatedUser, nil

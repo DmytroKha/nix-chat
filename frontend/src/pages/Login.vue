@@ -19,10 +19,10 @@
         <div class="input-group-append">
           <button
             class="input-group-text send_btn"
-            :disabled="isDisabled()"
+            :disabled=isDisabled
             @click="login"
-          >
             >
+            &gt;
           </button>
         </div>
       </div>
@@ -58,13 +58,15 @@ export default {
       loginError: "",
     };
   },
+  computed: {
+    isDisabled() {
+      return !(this.user.username !== "" && this.user.password !== "");
+    },
+  },
   mounted: function () {},
   methods: {
     navigate() {
       router.push({ path: "/register" });
-    },
-    isDisabled() {
-      return !(this.user.username !== "" && this.user.password !== "");
     },
     async login() {
       try {

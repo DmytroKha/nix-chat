@@ -32,7 +32,7 @@
 
               <div class="input-group-append">
                 <span class="input-group-text send_btn" @click="changeName">
-                  >
+                  &gt;
                 </span>
               </div>
             </div>
@@ -56,7 +56,7 @@
               />
               <div class="input-group-append">
                 <span class="input-group-text send_btn" @click="changePass">
-                  >
+                  &gt;
                 </span>
               </div>
             </div>

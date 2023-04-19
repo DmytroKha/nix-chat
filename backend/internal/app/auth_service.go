@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var AuthErrInvalidCredentials = errors.New("invalid credentials")
+
 //go:generate mockery --dir . --name AuthService --output ./mocks
 type AuthService interface {
 	Register(user requests.UserRegistrationRequest) (database.User, string, error)
@@ -35,19 +37,18 @@ func NewAuthService(us UserService, cf config.Configuration) AuthService {
 func (s authService) Register(usr requests.UserRegistrationRequest) (database.User, string, error) {
 	u, err := usr.ToDatabaseModel()
 	if err != nil {
-		log.Print(err)
+		log.Printf("AuthService: login error %s", err)
 		return database.User{}, "", err
 	}
 	_, err = s.userService.FindByName(u.Name)
 	if err == nil {
-		log.Printf("invalid credentials")
-		return database.User{}, "", errors.New("invalid credentials")
+		log.Printf("AuthService: login error %s", AuthErrInvalidCredentials)
+		return database.User{}, "", AuthErrInvalidCredentials
 	}
-	//u.Uid = uuid.New().String()
 
 	user, err := s.userService.Save(u)
 	if err != nil {
-		log.Print(err)
+		log.Printf("AuthService: login error %s", err)
 		return database.User{}, "", err
 	}
 	token, err := s.GenerateJwt(user)
@@ -72,7 +73,8 @@ func (s authService) Login(usr requests.UserLoginRequest) (database.User, string
 	}
 	valid := s.checkPasswordHash(user.Password, u.Password)
 	if !valid {
-		return database.User{}, "", errors.New("invalid credentials")
+		log.Printf("AuthService: login error %s", AuthErrInvalidCredentials)
+		return database.User{}, "", AuthErrInvalidCredentials
 	}
 	token, err := s.GenerateJwt(u)
 	return u, token, err
@@ -80,8 +82,7 @@ func (s authService) Login(usr requests.UserLoginRequest) (database.User, string
 
 func (s authService) GenerateJwt(user database.User) (string, error) {
 	claims := resources.JwtClaims{
-		ID: user.Id,
-		//Uid:   user.Uid,
+		ID:    user.Id,
 		Name:  user.Name,
 		Photo: user.Image.Name,
 		StandardClaims: jwt.StandardClaims{

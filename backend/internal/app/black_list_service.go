@@ -25,7 +25,7 @@ func NewBlacklistService(r database.BlacklistRepository) BlacklistService {
 func (s blacklistService) Save(bl database.Blacklist) (database.Blacklist, error) {
 	blacklist, err := s.blRepo.Save(bl)
 	if err != nil {
-		log.Print(err)
+		log.Print("Blacklist: %s", err)
 		return database.Blacklist{}, err
 	}
 	return blacklist, nil
@@ -34,7 +34,7 @@ func (s blacklistService) Save(bl database.Blacklist) (database.Blacklist, error
 func (s blacklistService) Delete(id int64) error {
 	err := s.blRepo.Delete(id)
 	if err != nil {
-		log.Print(err)
+		log.Print("Blacklist: %s", err)
 		return err
 	}
 	return nil
@@ -43,7 +43,7 @@ func (s blacklistService) Delete(id int64) error {
 func (s blacklistService) Find(userId, roomId int64) (database.Blacklist, error) {
 	blacklist, err := s.blRepo.Find(userId, roomId)
 	if err != nil {
-		log.Print(err)
+		log.Print("Blacklist: %s", err)
 		return database.Blacklist{}, err
 	}
 	return blacklist, nil
@@ -52,7 +52,7 @@ func (s blacklistService) Find(userId, roomId int64) (database.Blacklist, error)
 func (s blacklistService) FindAll(userId int64) ([]database.Blacklist, error) {
 	bls, err := s.blRepo.FindAll(userId)
 	if err != nil {
-		log.Print(err)
+		log.Print("Blacklist: %s", err)
 		return []database.Blacklist{}, err
 	}
 	return bls, nil
