@@ -81,7 +81,6 @@ func main() {
 		authController,
 		imageController,
 		wsServer,
-		conf,
 	)
 
 	// service start at port :8080

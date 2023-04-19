@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/DmytroKha/nix-chat/config"
 	"github.com/DmytroKha/nix-chat/internal/infra/http"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/controllers"
 	"github.com/DmytroKha/nix-chat/internal/infra/http/middlewares"
@@ -13,8 +12,7 @@ import (
 func New(userController controllers.UserController,
 	authController controllers.AuthController,
 	imageController controllers.ImageController,
-	wsServer *websocket.WsServer,
-	cf config.Configuration) *echo.Echo {
+	wsServer *websocket.WsServer) *echo.Echo {
 
 	e := echo.New()
 	e.Use(middleware.CORS())

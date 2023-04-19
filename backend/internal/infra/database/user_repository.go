@@ -79,7 +79,7 @@ func (r userRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *userRepository) Find(id int64) (User, error) {
+func (r userRepository) Find(id int64) (User, error) {
 	var u User
 	err := r.sess.Table(UserTableName).First(&u, "id = ?", id).Error
 	if err != nil {
@@ -88,7 +88,7 @@ func (r *userRepository) Find(id int64) (User, error) {
 	return u, nil
 }
 
-func (r *userRepository) FindByName(name string) (User, error) {
+func (r userRepository) FindByName(name string) (User, error) {
 	var u User
 	err := r.sess.Table(UserTableName).First(&u, "name = ?", name).Error
 	if err != nil {

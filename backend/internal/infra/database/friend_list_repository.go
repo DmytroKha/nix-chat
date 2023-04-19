@@ -46,7 +46,7 @@ func (r friendlistRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *friendlistRepository) Find(userId, roomId int64) (Friendlist, error) {
+func (r friendlistRepository) Find(userId, roomId int64) (Friendlist, error) {
 	var bl Friendlist
 	err := r.sess.Table(FriendlistTableName).First(&bl, "user_id = ? AND room_id = ?", userId, roomId).Error
 	if err != nil {
