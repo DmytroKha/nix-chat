@@ -46,7 +46,7 @@ func (r blacklistRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *blacklistRepository) Find(userId, roomId int64) (Blacklist, error) {
+func (r blacklistRepository) Find(userId, roomId int64) (Blacklist, error) {
 	var bl Blacklist
 	err := r.sess.Table(BlacklistTableName).First(&bl, "user_id = ? AND room_id = ?", userId, roomId).Error
 	if err != nil {
