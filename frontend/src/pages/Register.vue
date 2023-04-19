@@ -38,7 +38,8 @@
       </div>
 
       <div class="navigation">
-        <button @click="navigate">Login Page</button>
+<!--        <button @click="navigate">Login Page</button>-->
+        <button><router-link to="/">Login Page</router-link></button>
       </div>
     </div>
   </div>

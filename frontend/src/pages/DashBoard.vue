@@ -4,7 +4,8 @@
       <h1>Dashboard</h1>
       <div>
         <button @click="logout">logout</button>
-        <button @click="navigate">profile</button>
+<!--        <button @click="navigate">profile</button>-->
+        <button ><router-link to="/profile">profile</router-link></button>
       </div>
     </div>
     <div class="content">
@@ -45,7 +46,9 @@
                   @keyup.enter.exact="joinRoom"
               />
               <div class="input-group-append">
-                <span class="input-group-text send_btn" @click="joinRoom(roomInput)"> > </span>
+                <span class="input-group-text send_btn" @click="joinRoom(roomInput)">
+                &gt;
+                </span>
               </div>
               <div class="input-group-append">
 <!--            <span class="input-group-text send_btn" @click="getAllRooms">-->
