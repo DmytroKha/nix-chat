@@ -4,7 +4,8 @@
       <div class="container h-100">
         <div class="header">
           <h1>Profile</h1>
-          <button @click="navigate">dasboard</button>
+<!--          <button @click="navigate">dasboard</button>-->
+          <button ><router-link to="/dashboard">dasboard</router-link></button>
         </div>
         <div class="row justify-content-center h-100">
 

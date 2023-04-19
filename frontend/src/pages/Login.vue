@@ -33,7 +33,8 @@
     </div>
 
     <div class="navigation">
-      <button @click="navigate">Register Page</button>
+<!--      <button @click="navigate">Register Page</button>-->
+      <button><router-link to="/register">Register Page</router-link></button>
     </div>
   </div>
 </template>
