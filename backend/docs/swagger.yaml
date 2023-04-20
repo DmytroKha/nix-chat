@@ -1,0 +1,229 @@
+basePath: /api/v1
+definitions:
+  requests.ChangePasswordRequest:
+    properties:
+      newPassword:
+        minLength: 6
+        type: string
+      oldPassword:
+        minLength: 6
+        type: string
+    required:
+    - newPassword
+    - oldPassword
+    type: object
+  requests.UserLoginRequest:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  requests.UserRegistrationRequest:
+    properties:
+      confirmPassword:
+        minLength: 6
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - confirmPassword
+    - password
+    - username
+    type: object
+  requests.UserRequest:
+    properties:
+      imageId:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Server for nix_chat application.
+  title: nix_chat
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a user with their credentials
+      parameters:
+      - description: User login details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token, user ID, and user photo
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Handle user login
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the provided details.
+      parameters:
+      - description: User registration details.
+        in: body
+        name: userRegistrationRequest
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UserRegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registered successfully.
+          schema:
+            type: string
+        "400":
+          description: Invalid request format or missing required fields.
+          schema:
+            type: string
+        "422":
+          description: Validation errors occurred.
+          schema:
+            type: string
+        "500":
+          description: Internal server error.
+          schema:
+            type: string
+      summary: Register a new user.
+      tags:
+      - auth
+  /images:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds an image to the user's account
+      parameters:
+      - description: Image file to upload
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the URL of the uploaded image
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Add an image
+      tags:
+      - images
+  /users/name:
+    put:
+      consumes:
+      - application/json
+      description: Change user name by ID
+      parameters:
+      - description: Data for change name
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User name after change
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Change user name
+      tags:
+      - users
+  /users/password:
+    put:
+      consumes:
+      - application/json
+      description: Change user password by ID
+      parameters:
+      - description: Data for change password
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User changed password
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
