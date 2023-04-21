@@ -69,8 +69,9 @@ func main() {
 	friendlistService := app.NewFriendlistService(friendlistRepository)
 
 	roomRepository := database.NewRoomRepository(db)
+	roomService := app.NewRoomService(roomRepository)
 
-	wsServer := websocket.NewWebsocketServer(roomRepository, userRepository, blacklistService, friendlistService)
+	wsServer := websocket.NewWebsocketServer(roomService, userService, blacklistService, friendlistService)
 	go wsServer.Run(ctx)
 
 	authService := app.NewAuthService(userService, conf)

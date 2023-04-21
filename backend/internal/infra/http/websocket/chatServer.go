@@ -20,21 +20,21 @@ type WsServer struct {
 	broadcast         chan []byte
 	rooms             map[*Room]bool
 	users             []domain.User
-	roomRepository    database.RoomRepository
-	userRepository    database.UserRepository
+	roomService       app.RoomService
+	userService       app.UserService
 	blacklistService  app.BlacklistService
 	friendlistService app.FriendlistService
 }
 
 // NewWebsocketServer creates a new WsServer type
-func NewWebsocketServer(roomRepository database.RoomRepository, userRepository database.UserRepository, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
+func NewWebsocketServer(roomService app.RoomService, userService app.UserService, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
 	wsServer := &WsServer{
 		clients:           make(map[*Client]bool),
 		register:          make(chan *Client),
 		unregister:        make(chan *Client),
 		rooms:             make(map[*Room]bool),
-		roomRepository:    roomRepository,
-		userRepository:    userRepository,
+		roomService:       roomService,
+		userService:       userService,
 		blacklistService:  blacklistService,
 		friendlistService: friendlistService,
 	}
@@ -84,7 +84,7 @@ func (server *WsServer) findRoomByName(name string, ctx context.Context) *Room {
 
 func (server *WsServer) createRoom(name string, private bool, ctx context.Context) *Room {
 	room := NewRoom(name, private)
-	newRoom, _ := server.roomRepository.Save(room)
+	newRoom, _ := server.roomService.Save(room)
 	room.ID = newRoom.GetId()
 
 	go room.RunRoom(ctx)
@@ -95,7 +95,7 @@ func (server *WsServer) createRoom(name string, private bool, ctx context.Contex
 
 //func (server *WsServer) findAllRooms(ctx context.Context) map[*Room]bool {
 func (server *WsServer) findAllRooms(ctx context.Context) []domain.Room {
-	rooms, _ := server.roomRepository.FindAll()
+	rooms, _ := server.roomService.FindAll()
 
 	return rooms
 }
@@ -120,7 +120,7 @@ func (server *WsServer) registerClient(client *Client, ctx context.Context) {
 		// Add user to the repo
 		var userRepo database.User
 		userRepo.Name = client.GetName()
-		server.userRepository.Save(userRepo)
+		server.userService.Save(userRepo)
 	}
 
 	// Publish user in PubSub
@@ -166,7 +166,7 @@ func (server *WsServer) findClientByID(ID int64) *Client {
 // NEW: Try to find a room in the repo, if found Run it.
 func (server *WsServer) runRoomFromRepository(name string, ctx context.Context) *Room {
 	var room *Room
-	dbRoom, _ := server.roomRepository.FindByName(name)
+	dbRoom, _ := server.roomService.FindByName(name)
 	if dbRoom != nil {
 		room = NewRoom(dbRoom.GetName(), dbRoom.GetPrivate())
 		room.ID = dbRoom.GetId()
@@ -262,7 +262,7 @@ func (server *WsServer) findUserByID(ID int64) domain.User {
 
 	if foundUser == nil {
 		var repoClient database.User
-		repoClient, _ = server.userRepository.Find(ID)
+		repoClient, _ = server.userService.Find(ID)
 		foundUser = &repoClient
 	}
 

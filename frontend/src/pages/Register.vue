@@ -38,7 +38,6 @@
       </div>
 
       <div class="navigation">
-<!--        <button @click="navigate">Login Page</button>-->
         <button><router-link to="/">Login Page</router-link></button>
       </div>
     </div>
@@ -114,7 +113,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .register {
   text-align: center;

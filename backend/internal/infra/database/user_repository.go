@@ -32,9 +32,8 @@ type UserRepository interface {
 	Delete(id int64) error
 	Find(id int64) (User, error)
 	FindByName(name string) (User, error)
-	FindAll() ([]domain.User, error)
-	GetUserBlackList(user domain.User) ([]domain.User, error)
-	GetUserFriends(user domain.User) ([]domain.User, error)
+	GetUserBlackList(id int64) ([]User, error)
+	GetUserFriends(id int64) ([]User, error)
 }
 
 func NewUserRepository(dbSession *gorm.DB) UserRepository {
@@ -111,51 +110,33 @@ func (r userRepository) FindAll() ([]domain.User, error) {
 	return users, nil
 }
 
-func (r userRepository) GetUserBlackList(user domain.User) ([]domain.User, error) {
-	var usrs []User
+func (r userRepository) GetUserBlackList(id int64) ([]User, error) {
+	var users []User
 
-	u, err := r.Find(user.GetId())
-	if err != nil {
-		return nil, err
-	}
-	err = r.sess.Raw("SELECT users.id, users.name, "+
+	err := r.sess.Raw("SELECT users.id, users.name, "+
 		" black_list.user_id AS user_id, black_list.foe_id AS foe_id"+
 		" FROM users"+
 		" LEFT JOIN black_list ON black_list.foe_id = users.id"+
-		" WHERE black_list.user_id = ?", u.Id).Scan(&usrs).Error
+		" WHERE black_list.user_id = ?", id).Scan(&users).Error
 
 	if err != nil {
 		return nil, err
-	}
-	var users []domain.User
-	for _, usr := range usrs {
-		newUser := usr
-		users = append(users, &newUser)
 	}
 
 	return users, nil
 }
 
-func (r userRepository) GetUserFriends(user domain.User) ([]domain.User, error) {
-	var usrs []User
+func (r userRepository) GetUserFriends(id int64) ([]User, error) {
+	var users []User
 
-	u, err := r.Find(user.GetId())
-	if err != nil {
-		return nil, err
-	}
-	err = r.sess.Raw("SELECT users.id, users.name, "+
+	err := r.sess.Raw("SELECT users.id, users.name, "+
 		" friend_list.user_id AS user_id, friend_list.friend_id AS friend_id"+
 		" FROM users"+
 		" LEFT JOIN friend_list ON friend_list.friend_id = users.id"+
-		" WHERE friend_list.user_id = ?", u.Id).Scan(&usrs).Error
+		" WHERE friend_list.user_id = ?", id).Scan(&users).Error
 
 	if err != nil {
 		return nil, err
-	}
-	var users []domain.User
-	for _, usr := range usrs {
-		newUser := usr
-		users = append(users, &newUser)
 	}
 
 	return users, nil

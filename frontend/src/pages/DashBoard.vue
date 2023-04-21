@@ -4,7 +4,6 @@
       <h1>Dashboard</h1>
       <div>
         <button @click="logout">logout</button>
-<!--        <button @click="navigate">profile</button>-->
         <button ><router-link to="/profile">profile</router-link></button>
       </div>
     </div>
@@ -17,7 +16,6 @@
             <input type="text" v-model="search">
             </div>
             <div class="row" v-if="users.length">
-<!--              <div class="col-2 card profile"  v-for="user in users" :key="user.id">-->
               <div class="col-2 card profile"  v-for="user in usersByName" :key="user.id">
                 <div class="card-header">{{ user.name }}</div>
                 <div class="card-body">
@@ -49,11 +47,6 @@
                 <span class="input-group-text send_btn" @click="joinRoom(roomInput)">
                 &gt;
                 </span>
-              </div>
-              <div class="input-group-append">
-<!--            <span class="input-group-text send_btn" @click="getAllRooms">-->
-<!--              >-->
-<!--            </span>-->
               </div>
             </div>
             <div class="row" v-if="users.length">

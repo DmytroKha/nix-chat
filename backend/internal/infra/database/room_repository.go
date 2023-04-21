@@ -1,7 +1,6 @@
 package database
 
 import (
-	"github.com/DmytroKha/nix-chat/internal/domain"
 	"gorm.io/gorm"
 )
 
@@ -18,9 +17,9 @@ type roomRepository struct {
 }
 
 type RoomRepository interface {
-	Save(room domain.Room) (domain.Room, error)
-	FindByName(name string) (domain.Room, error)
-	FindAll() ([]domain.Room, error)
+	Save(room Room) (Room, error)
+	FindByName(name string) (Room, error)
+	FindAll() ([]Room, error)
 }
 
 func NewRoomRepository(dbSession *gorm.DB) RoomRepository {
@@ -41,43 +40,30 @@ func (room *Room) GetPrivate() bool {
 	return room.Private
 }
 
-func (rr roomRepository) Save(r domain.Room) (domain.Room, error) {
-	var room Room
-
-	room.Name = r.GetName()
-	room.Private = r.GetPrivate()
-	err := rr.sess.Table(RoomTableName).Create(&room).Error
+func (rr roomRepository) Save(r Room) (Room, error) {
+	err := rr.sess.Table(RoomTableName).Create(&r).Error
 	if err != nil {
-		return nil, err
+		return Room{}, err
 	}
-
-	var rooms []domain.Room
-	rooms = append(rooms, &room)
-	r = rooms[0]
 
 	return r, nil
 }
 
-func (rr roomRepository) FindByName(name string) (domain.Room, error) {
+func (rr roomRepository) FindByName(name string) (Room, error) {
 	var r Room
 	err := rr.sess.Table(RoomTableName).First(&r, "name = ?", name).Error
 	if err != nil {
-		return nil, err
+		return Room{}, err
 	}
-	return &r, nil
+	return r, nil
 }
 
-func (rr roomRepository) FindAll() ([]domain.Room, error) {
+func (rr roomRepository) FindAll() ([]Room, error) {
 	var rms []Room
 	err := rr.sess.Table(RoomTableName).Where("private = 0").Find(&rms).Error
 	if err != nil {
 		return nil, err
 	}
-	var rooms []domain.Room
-	for _, rm := range rms {
-		room := rm
-		rooms = append(rooms, &room)
-	}
 
-	return rooms, nil
+	return rms, nil
 }

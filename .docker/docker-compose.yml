@@ -4,24 +4,6 @@ services:
     image: "redis:alpine"
     ports:
       - "6364:6379"
-  app:
-    container_name: nix_chat
-    environment:
-      - DB_NAME=${DB_NAME:-nix_chat}
-      - DB_HOST=${DB_HOST:-mysqldb}
-      - DB_USER=${DB_USER:-root}
-      - DB_PASSWORD=${DB_PASSWORD:-root}
-      - JWT_SECRET=${JWT_SECRET:-123456}
-    build:
-      context: ../
-      dockerfile: .docker/Dockerfile
-    ports:
-      - '8081:8080'
-    restart: unless-stopped
-    depends_on:
-      - mysqldb
-    networks:
-      - default
 
   mysqldb:
     image: mysql:8.0
@@ -38,6 +20,25 @@ services:
       - my-db:/var/lib/mysql
     ports:
       - '3306:3306'
+    networks:
+      - default
+
+  app:
+    container_name: nix_chat
+    environment:
+      - DB_NAME=${DB_NAME:-nix_chat}
+      - DB_HOST=${DB_HOST:-mysqldb}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-123456}
+    build:
+      context: ../
+      dockerfile: .docker/Dockerfile
+    ports:
+      - '8081:8080'
+    restart: unless-stopped
+    depends_on:
+      - mysqldb
     networks:
       - default
 

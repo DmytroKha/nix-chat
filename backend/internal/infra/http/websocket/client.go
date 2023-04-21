@@ -271,7 +271,7 @@ func (client *Client) handleRemoveFromBlackListMessage(message Message, ctx cont
 
 func (client *Client) handleBlackList(message Message) {
 	sender := message.Sender
-	users, _ := client.wsServer.userRepository.GetUserBlackList(sender)
+	users, _ := client.wsServer.userService.GetUserBlackList(sender)
 
 	msg := Message{
 		Action: GetBlackList,
@@ -296,7 +296,7 @@ func (client *Client) handleRemoveFromFriendsMessage(message Message, ctx contex
 
 func (client *Client) handleFriends(message Message) {
 	sender := message.Sender
-	users, _ := client.wsServer.userRepository.GetUserFriends(sender)
+	users, _ := client.wsServer.userService.GetUserFriends(sender)
 
 	msg := Message{
 		Action: GetFriends,
@@ -364,7 +364,7 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message, ctx context.
 		roomName = strID + message.Message
 	}
 
-	room, _ := client.wsServer.roomRepository.FindByName(roomName)
+	room, _ := client.wsServer.roomService.FindByName(roomName)
 	if room != nil {
 		bl, _ := client.wsServer.blacklistService.Find(int64(userId), room.GetId())
 

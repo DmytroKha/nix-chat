@@ -23,6 +23,7 @@ type UserService interface {
 	LoadAvatar(user database.User) (database.User, error)
 	GeneratePasswordHash(password string) (string, error)
 	GetUserBlackList(user domain.User) ([]domain.User, error)
+	GetUserFriends(user domain.User) ([]domain.User, error)
 }
 
 type userService struct {
@@ -187,12 +188,31 @@ func (s userService) LoadAvatar(user database.User) (database.User, error) {
 }
 
 func (s userService) GetUserBlackList(user domain.User) ([]domain.User, error) {
-	blackList, err := s.userRepo.GetUserBlackList(user)
+	users, err := s.userRepo.GetUserBlackList(user.GetId())
 	if err != nil {
 		log.Printf("UserService: %s", err)
 		return []domain.User{}, err
 	}
+	var blackList []domain.User
+	for _, u := range users {
+		newUser := u
+		blackList = append(blackList, &newUser)
+	}
 	return blackList, err
+}
+
+func (s userService) GetUserFriends(user domain.User) ([]domain.User, error) {
+	users, err := s.userRepo.GetUserFriends(user.GetId())
+	if err != nil {
+		log.Printf("UserService: %s", err)
+		return []domain.User{}, err
+	}
+	var friends []domain.User
+	for _, u := range users {
+		newUser := u
+		friends = append(friends, &newUser)
+	}
+	return friends, err
 }
 
 func (s userService) GeneratePasswordHash(password string) (string, error) {
