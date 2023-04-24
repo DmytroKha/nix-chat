@@ -33,8 +33,7 @@
     </div>
 
     <div class="navigation">
-<!--      <button @click="navigate">Register Page</button>-->
-      <button><router-link to="/register">Register Page</router-link></button>
+      <button><router-link :to="{ name: 'Register'}">Register Page</router-link></button>
     </div>
   </div>
 </template>
@@ -66,9 +65,6 @@ export default {
   },
   mounted: function () {},
   methods: {
-    navigate() {
-      router.push({ path: "/register" });
-    },
     async login() {
       try {
         //const result = await this.axios.post("http://" + location.host + '/api/v1/auth/login', this.user);
@@ -86,7 +82,7 @@ export default {
           wsConnect.user.id = result.data.id;
           wsConnect.user.name = this.user.username;
           wsConnect.user.photo = result.data.photo
-          router.push({ path: "/dashboard" });
+          router.push({ name: 'dashboard'});
         }
       } catch (e) {
         this.loginError = "Login failed 2";
@@ -97,7 +93,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .login {
   text-align: center;

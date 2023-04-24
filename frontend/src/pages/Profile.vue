@@ -4,8 +4,7 @@
       <div class="container h-100">
         <div class="header">
           <h1>Profile</h1>
-<!--          <button @click="navigate">dasboard</button>-->
-          <button ><router-link to="/dashboard">dasboard</router-link></button>
+          <button ><router-link :to="{ name: 'dashboard'}">dashboard</router-link></button>
         </div>
         <div class="row justify-content-center h-100">
 
@@ -73,7 +72,6 @@
 </template>
 
 <script>
-import router from "../router";
 import { wsConnect } from "@/services/WSConnectService";
 export default {
   name: "ProfilePage",
@@ -93,9 +91,6 @@ export default {
     this.user.photo = wsConnect.user.photo
   },
   methods: {
-    navigate() {
-      router.push({ path: "/dashboard" });
-    },
     async changePass() {
       try {
         const result = await this.axios.put(
@@ -190,7 +185,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .input-group {
   display: flex;
