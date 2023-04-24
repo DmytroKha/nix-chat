@@ -4,7 +4,7 @@
       <div class="container h-100">
         <div class="header">
           <h1>Profile</h1>
-          <button ><router-link to="/dashboard">dasboard</router-link></button>
+          <button ><router-link :to="{ name: 'dashboard'}">dashboard</router-link></button>
         </div>
         <div class="row justify-content-center h-100">
 

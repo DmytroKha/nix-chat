@@ -14,26 +14,23 @@ import DashBoard from "../pages/DashBoard.vue";
 
 const routes = [{
     path: '/',
-    // name: 'Login',
+    name: 'Login',
     component: LoginPage
   },
   {
     path: '/Register',
+    name: 'Register',
     component: RegisterPage
   },
   {
     path: '/profile',
+    name: 'profile',
     component: ProfilePage
   },
   {
     path: '/dashboard',
+    name: 'dashboard',
     component: DashBoard,
-    // meta: { requiresAuth: true },
-    // children: [{
-    //   path: "/dashboard/profile",
-    //   component: ProfilePage,
-    //   // meta: { requiresAuth: true }
-    // }, ]
   },
 ]
 

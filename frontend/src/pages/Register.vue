@@ -38,7 +38,7 @@
       </div>
 
       <div class="navigation">
-        <button><router-link to="/">Login Page</router-link></button>
+        <button><router-link :to="{ name: 'Login'}">Login Page</router-link></button>
       </div>
     </div>
   </div>
@@ -86,9 +86,6 @@ export default {
   },
   mounted: function () {},
   methods: {
-    navigate() {
-      router.push({ path: "/" });
-    },
     async register() {
       try {
         //const result = await this.axios.post("http://" + location.host + '/api/v1/auth/login', this.user);
@@ -103,6 +100,7 @@ export default {
           this.registerError = "Register failed";
         } else {
           this.user.token = result.data;
+          router.push({ name: 'Login'});
         }
       } catch (e) {
         this.registerError = "Register failed";

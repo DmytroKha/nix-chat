@@ -4,7 +4,7 @@
       <h1>Dashboard</h1>
       <div>
         <button @click="logout">logout</button>
-        <button ><router-link to="/profile">profile</router-link></button>
+        <button ><router-link :to="{ name: 'profile'}">profile</router-link></button>
       </div>
     </div>
     <div class="content">
@@ -196,9 +196,6 @@ export default {
       }
   },
   methods: {
-    navigate() {
-      router.push({ path: "/profile" });
-    },
     logout() {
       for (let i = 0; i < wsConnect.users.length; i++) {
         if (this.users[i].id == wsConnect.user.id) {
@@ -209,8 +206,12 @@ export default {
           break;
         }
       }
+      wsConnect.rooms = [];
+      wsConnect.chatRooms = [];
+      wsConnect.user.blackList = [];
+      wsConnect.user.friends = [];
       wsConnect.ws = null;
-      router.push({ path: "/" });
+      router.push({ name: 'Login'});
     },
     connect() {
       wsConnect.connectToWebsocket();
@@ -246,6 +247,8 @@ export default {
       this.users = wsConnect.users;
       this.rooms = wsConnect.rooms;
       this.chatRooms = wsConnect.chatRooms;
+      this.friends = wsConnect.user.friends;
+      this.blackList = wsConnect.user.blackList;
       for (let i = 0; i < data.length; i++) {
         let msg = JSON.parse(data[i]);
         switch (msg.action) {
@@ -270,7 +273,7 @@ export default {
             wsConnect.rooms = this.rooms;
             break;
           case "add-friend":
-            this.friends = wsConnect.user.friends;
+
             this.handleFriendsJoined(msg);
             wsConnect.user.friends = this.friends;
             break;
@@ -278,7 +281,7 @@ export default {
             this.handleFriends(msg);
             break;
           case "add-to-black-list":
-            this.blackList = wsConnect.user.blackList;
+
             this.handleBlackListJoined(msg);
             wsConnect.user.blackList = this.blackList;
             break;
