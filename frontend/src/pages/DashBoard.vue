@@ -161,7 +161,6 @@ export default {
     return {
       showUsersList: 1,
       ws: null,
-      serverUrl: "ws://localhost:8080/ws",
       roomInput: null,
       rooms: [],
       chatRooms: [],
@@ -178,7 +177,7 @@ export default {
   },
   computed: {
     usersByName() {
-      return this.users.filter(item => item.name.indexOf(this.search) !== -1)
+      return this.users.filter(item => item.name.indexOf(this.search) !== -1);
     },
   },
   mounted: function () {
@@ -273,7 +272,6 @@ export default {
             wsConnect.rooms = this.rooms;
             break;
           case "add-friend":
-
             this.handleFriendsJoined(msg);
             wsConnect.user.friends = this.friends;
             break;
@@ -281,7 +279,6 @@ export default {
             this.handleFriends(msg);
             break;
           case "add-to-black-list":
-
             this.handleBlackListJoined(msg);
             wsConnect.user.blackList = this.blackList;
             break;

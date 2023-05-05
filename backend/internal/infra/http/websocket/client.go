@@ -69,7 +69,8 @@ func newClient(conn *websocket.Conn, wsServer *WsServer, name string, ID int64, 
 	}
 
 	if photo != "" {
-		client.Photo = "../././file_storage/" + photo
+		//client.Photo = "../././file_storage/" + photo
+		client.Photo = "../../file_storage/" + photo
 	}
 
 	return client

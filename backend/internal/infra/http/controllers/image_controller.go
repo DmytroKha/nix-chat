@@ -71,7 +71,8 @@ func (c ImageController) AddImage(ctx echo.Context) error {
 		return err
 	}
 
-	ctx.Response().Write([]byte("../././file_storage/" + i.Name))
+	//ctx.Response().Write([]byte("../././file_storage/" + i.Name))
+	ctx.Response().Write([]byte("../../file_storage/" + i.Name))
 
 	return nil
 }

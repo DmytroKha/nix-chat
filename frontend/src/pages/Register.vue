@@ -54,24 +54,13 @@ export default {
   data() {
     return {
       ws: null,
-      serverUrl: "ws://localhost:8080/ws",
-      roomInput: null,
-      rooms: [],
       user: {
         name: "",
         username: "",
         password: "",
         confirmPassword: "",
-        oldPassword: "",
-        newPassword: "",
         token: "",
-        friends: [],
-        foes: [],
       },
-      users: [],
-      initialReconnectDelay: 1000,
-      currentReconnectDelay: 0,
-      maxReconnectDelay: 16000,
       registerError: "",
     };
   },
@@ -90,7 +79,8 @@ export default {
       try {
         //const result = await this.axios.post("http://" + location.host + '/api/v1/auth/login', this.user);
         const result = await this.axios.post(
-          "http://localhost:8080/api/v1/auth/register",
+           // "http://localhost:8080/api/v1/auth/register",
+            "http://" + location.host + "/app/api/v1/auth/register",
           this.user
         );
         if (

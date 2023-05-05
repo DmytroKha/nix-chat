@@ -4,7 +4,7 @@ class WSConnectService {
   currentReconnectDelay = null;
   maxReconnectDelay = null;
   token = null;
-  serverUrl = "ws://localhost:8080/ws"
+  serverUrl = "ws://" + location.host + "/app/ws"
   users = []
   rooms = []
   chatRooms = []
@@ -23,18 +23,12 @@ class WSConnectService {
   }
 
   connectToWebsocket() {
-    //this.token = localStorage.getItem('token');
-    //if (this.token != "") {
     if (!this.ws) {
         this.ws = new WebSocket(this.serverUrl + "?bearer=" + this.user.token);
-        // } else {
-        //   this.ws = new WebSocket(this.serverUrl + "?name=" + this.user.name);
-      //}
     }
     this.ws.addEventListener('open', (event) => {
       this.onWebsocketOpen(event)
     });
-    //this.ws.addEventListener('message', (event) => { this.handleNewMessage(event) });
     this.ws.addEventListener('close', (event) => {
       this.onWebsocketClose(event)
     });
@@ -42,6 +36,7 @@ class WSConnectService {
 
   onWebsocketOpen() {
     console.log("connected to WS!");
+    console.log("users",this.users);
     this.getAllRooms();
     this.getBlackList();
     this.getFriendList();
@@ -64,6 +59,7 @@ class WSConnectService {
   }
 
   getAllRooms() {
+    console.log("all-rooms out")
     wsConnect.ws.send(
         JSON.stringify({ action: "all-rooms"})
     );

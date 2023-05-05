@@ -49,7 +49,6 @@ export default {
   data() {
     return {
       ws: null,
-      serverUrl: "ws://localhost:8080/ws",
       user: {
         name: "",
         username: "",
@@ -69,7 +68,8 @@ export default {
       try {
         //const result = await this.axios.post("http://" + location.host + '/api/v1/auth/login', this.user);
         const result = await this.axios.post(
-          "http://localhost:8080/api/v1/auth/login",
+           // "http://localhost:8080/api/v1/auth/login",
+            "http://" + location.host + "/app/api/v1/auth/login",
           this.user
         );
         if (
