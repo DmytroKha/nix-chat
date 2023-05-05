@@ -15,8 +15,23 @@ func New(userController controllers.UserController,
 	wsServer *websocket.WsServer) *echo.Echo {
 
 	e := echo.New()
+	e.Use(middleware.Logger())
+	//logFile, err := os.OpenFile("server.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer logFile.Close()
+	//log.SetOutput(logFile)
+	//
+	//logger := middleware.LoggerWithConfig(middleware.LoggerConfig{
+	//	Output: logFile,
+	//})
+	//
+	//e.Use(logger)
+	//log.Print("test2")
+
 	e.Use(middleware.CORS())
-	e.Use(middleware.Static("../frontend"))
+	//e.Use(middleware.Static("../frontend"))
 	e.GET("/ws", WsHandlerFunc(wsServer), middlewares.AuthMiddleware)
 
 	api := e.Group("/api/v1")

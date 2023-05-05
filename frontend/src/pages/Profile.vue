@@ -94,7 +94,8 @@ export default {
     async changePass() {
       try {
         const result = await this.axios.put(
-          "http://localhost:8080/api/v1/users/change-pwd?bearer=" +
+          // "http://localhost:8080/api/v1/users/change-pwd?bearer=" +
+            "http://" + location.host + "/app/api/v1/users/change-pwd?bearer=" +
             wsConnect.user.token,
             this.user
         );
@@ -114,7 +115,8 @@ export default {
     async changeName() {
       try {
         const result = await this.axios.put(
-          "http://localhost:8080/api/v1/users/change-name?bearer=" +
+          // "http://localhost:8080/api/v1/users/change-name?bearer=" +
+            "http://" + location.host + "/app/api/v1/users/change-name?bearer=" +
             wsConnect.user.token,
             this.user
         );
@@ -151,7 +153,8 @@ export default {
       console.log(formData)
       try {
         const result = await this.axios.put(
-            "http://localhost:8080/api/v1/users/change_avtr?bearer="+
+            // "http://localhost:8080/api/v1/users/change_avtr?bearer="+
+            "http://" + location.host + "/app/api/v1/users/change_avtr?bearer="+
             wsConnect.user.token,
             e.target.files[0]
         );

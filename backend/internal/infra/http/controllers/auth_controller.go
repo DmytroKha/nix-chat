@@ -103,7 +103,8 @@ func (c AuthController) HandleLogin(ctx echo.Context) error {
 		returnErrorResponse(ctx.Response().Writer, http.StatusBadRequest)
 		return err
 	}
-	photo := "../././file_storage/" + user.Image.Name
+	//photo := "../././file_storage/" + user.Image.Name
+	photo := "../../file_storage/" + user.Image.Name
 
 	str := fmt.Sprintf("{\"token\": \"%v\",\"id\": \"%v\",\"photo\": \"%v\"}", token, user.Id, photo)
 	ctx.Response().Write([]byte(str))

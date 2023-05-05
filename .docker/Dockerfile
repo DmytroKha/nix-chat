@@ -20,3 +20,4 @@ RUN rm -rf src
 EXPOSE 8080
 
 CMD [ "/app/nixchat" ]
+#ENTRYPOINT ["tail","-f", "/dev/null"]
