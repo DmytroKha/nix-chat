@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+//go:generate mockery --dir . --name FriendlistService --output ./mocks
 type FriendlistService interface {
 	Save(bl database.Friendlist) (database.Friendlist, error)
 	Delete(id int64) error

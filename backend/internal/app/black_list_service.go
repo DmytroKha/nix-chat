@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+//go:generate mockery --dir . --name BlacklistService --output ./mocks
 type BlacklistService interface {
 	Save(bl database.Blacklist) (database.Blacklist, error)
 	Delete(id int64) error

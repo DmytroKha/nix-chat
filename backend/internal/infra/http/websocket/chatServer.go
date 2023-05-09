@@ -26,7 +26,6 @@ type WsServer struct {
 	friendlistService app.FriendlistService
 }
 
-// NewWebsocketServer creates a new WsServer type
 func NewWebsocketServer(roomService app.RoomService, userService app.UserService, blacklistService app.BlacklistService, friendlistService app.FriendlistService) *WsServer {
 	wsServer := &WsServer{
 		clients:           make(map[*Client]bool),
