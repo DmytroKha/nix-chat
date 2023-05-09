@@ -9,6 +9,7 @@ type roomService struct {
 	roomRepo database.RoomRepository
 }
 
+//go:generate mockery --dir . --name RoomService --output ./mocks
 type RoomService interface {
 	Save(room domain.Room) (domain.Room, error)
 	FindByName(name string) (domain.Room, error)
